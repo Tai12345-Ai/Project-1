@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSA Cryptography Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #667eea;
+            --primary-dark: #764ba2;
+            --success: #4ade80;
+            --error: #f87171;
+            --warning: #fbbf24;
+            --info: #60a5fa;
+            --bg-dark: #1e1e1e;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: flex;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            padding: 20px 0;
+        }
+
+        .sidebar h3 {
+            padding: 0 20px 15px;
+            color: #495057;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #dee2e6;
+            margin-bottom: 10px;
+        }
+
+        .menu-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .menu-item:hover {
+            background: #e9ecef;
+            border-left-color: var(--primary);
+        }
+
+        .menu-item.active {
+            background: var(--primary);
+            color: white;
+            border-left-color: var(--primary-dark);
+        }
+
+        .menu-item-icon {
+            font-size: 1.5rem;
+        }
+
+        .menu-item-content {
+            flex: 1;
+        }
+
+        .menu-item-title {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .menu-item-desc {
+            font-size: 0.85em;
+            opacity: 0.7;
+        }
+
+        .content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+        }
+
+        .card h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .output {
+            background: var(--bg-dark);
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 500px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .output::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .output::-webkit-scrollbar-track {
+            background: #2d2d2d;
+        }
+
+        .output::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        .success {
+            color: var(--success);
+        }
+
+        .error {
+            color: var(--error);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .demo-card {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .demo-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.2);
+        }
+
+        .demo-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .demo-title {
+            font-weight: 700;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+
+        .demo-desc {
+            font-size: 0.85em;
+            color: #6c757d;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #dee2e6;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 RSA Cryptography Tool</h1>
+            <p>Công cụ minh họa thuật toán RSA - Đồ án CLRS Chương 31</p>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <h3>RSA Operations</h3>
+                <div class="menu-item active" data-section="keygen">
+                    <div class="menu-item-icon">🔑</div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">Key Generator</div>
+                        <div class="menu-item-desc">Sinh cặp khóa RSA</div>
+                    </div>
+                </div>
+                <div class="menu-item" data-section="encrypt">
+                    <div class="menu-item-icon">🔒</div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">Encryption</div>
+                        <div class="menu-item-desc">Mã hóa tin nhắn</div>
+                    </div>
+                </div>
+                <div class="menu-item" data-section="decrypt">
+                    <div class="menu-item-icon">🔓</div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">Decryption</div>
+                        <div class="menu-item-desc">Giải mã tin nhắn</div>
+                    </div>
+                </div>
+                <div class="menu-item" data-section="sign">
+                    <div class="menu-item-icon">✍️</div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">Sign Message</div>
+                        <div class="menu-item-desc">Ký số tin nhắn</div>
+                    </div>
+                </div>
+                <div class="menu-item" data-section="verify">
+                    <div class="menu-item-icon">✅</div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">Verify Signature</div>
+                        <div class="menu-item-desc">Xác minh chữ ký</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px;">Demos</h3>
+                <div class="menu-item" data-section="demos">
+                    <div class="menu-item-icon">🎬</div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">Run Demos</div>
+                        <div class="menu-item-desc">Chạy các demo</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Key Generation Section -->
+                <div class="section active" id="keygen">
+                    <div class="card">
+                        <h3>🔑 Generate RSA Key Pair</h3>
+                        <div class="info-box">
+                            <strong>Thuật toán:</strong> CLRS 31.7 - RSA Key Generation<br>
+                            Sử dụng Miller-Rabin (CLRS 31.8) để sinh số nguyên tố
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="keyBits">Key Size (bits):</label>
+                            <select id="keyBits">
+                                <option value="512">512 bits (Demo only - Fast)</option>
+                                <option value="1024" selected>1024 bits (Recommended)</option>
+                                <option value="2048">2048 bits (Secure - Slow)</option>
+                            </select>
+                        </div>
+
+                        <button onclick="generateKey()">Generate Keys</button>
+
+                        <div id="keyOutput"></div>
+                    </div>
+                </div>
+
+                <!-- Encryption Section -->
+                <div class="section" id="encrypt">
+                    <div class="card">
+                        <h3>🔒 Encrypt Message</h3>
+                        <div class="info-box">
+                            <strong>Công thức:</strong> c = m<sup>e</sup> mod n<br>
+                            Chỉ cần public key (e, n) để mã hóa
+                        </div>
+
+                        <div class="form-group">
+                            <label for="encryptMessage">Message to Encrypt:</label>
+                            <textarea id="encryptMessage" placeholder="Enter your message here...">Hello RSA!</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="encryptE">Public Exponent (e):</label>
+                            <input type="text" id="encryptE" placeholder="65537">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="encryptN">Modulus (n):</label>
+                            <textarea id="encryptN" placeholder="Enter public modulus n"></textarea>
+                        </div>
+
+                        <button onclick="encryptMessage()">Encrypt</button>
+
+                        <div id="encryptOutput"></div>
+                    </div>
+                </div>
+
+                <!-- Decryption Section -->
+                <div class="section" id="decrypt">
+                    <div class="card">
+                        <h3>🔓 Decrypt Message</h3>
+                        <div class="info-box">
+                            <strong>Công thức:</strong> m = c<sup>d</sup> mod n<br>
+                            Cần private key (d, n) để giải mã
+                        </div>
+
+                        <div class="form-group">
+                            <label for="decryptCiphertext">Ciphertext (comma-separated blocks):</label>
+                            <textarea id="decryptCiphertext" placeholder="123456789, 987654321, ..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="decryptD">Private Exponent (d):</label>
+                            <textarea id="decryptD" placeholder="Enter private exponent d"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="decryptN">Modulus (n):</label>
+                            <textarea id="decryptN" placeholder="Enter modulus n"></textarea>
+                        </div>
+
+                        <button onclick="decryptMessage()">Decrypt</button>
+
+                        <div id="decryptOutput"></div>
+                    </div>
+                </div>
+
+                <!-- Sign Section -->
+                <div class="section" id="sign">
+                    <div class="card">
+                        <h3>✍️ Sign Message</h3>
+                        <div class="info-box">
+                            <strong>Công thức:</strong> sig = hash(m)<sup>d</sup> mod n<br>
+                            Dùng SHA-256 hash, sau đó ký với private key
+                        </div>
+
+                        <div class="form-group">
+                            <label for="signMessage">Message to Sign:</label>
+                            <textarea id="signMessage" placeholder="Enter your message...">I owe Alice $100</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="signD">Private Exponent (d):</label>
+                            <textarea id="signD" placeholder="Enter private exponent d"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="signN">Modulus (n):</label>
+                            <textarea id="signN" placeholder="Enter modulus n"></textarea>
+                        </div>
+
+                        <button onclick="signMessage()">Sign</button>
+
+                        <div id="signOutput"></div>
+                    </div>
+                </div>
+
+                <!-- Verify Section -->
+                <div class="section" id="verify">
+                    <div class="card">
+                        <h3>✅ Verify Signature</h3>
+                        <div class="info-box">
+                            <strong>Công thức:</strong> sig<sup>e</sup> mod n = hash(m)<br>
+                            Chỉ cần public key (e, n) để xác minh
+                        </div>
+
+                        <div class="form-group">
+                            <label for="verifyMessage">Original Message:</label>
+                            <textarea id="verifyMessage" placeholder="Enter the original message..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="verifySignature">Signature:</label>
+                            <input type="text" id="verifySignature" placeholder="Enter signature">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="verifyE">Public Exponent (e):</label>
+                            <input type="text" id="verifyE" placeholder="65537">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="verifyN">Modulus (n):</label>
+                            <textarea id="verifyN" placeholder="Enter public modulus n"></textarea>
+                        </div>
+
+                        <button onclick="verifySignature()">Verify</button>
+
+                        <div id="verifyOutput"></div>
+                    </div>
+                </div>
+
+                <!-- Demos Section -->
+                <div class="section" id="demos">
+                    <div class="card">
+                        <h3>🎬 Interactive Demos</h3>
+                        <div class="info-box">
+                            <strong>Các demo minh họa từ CLRS Chương 31</strong><br>
+                            Nhấn vào các nút bên dưới để chạy demo tương ứng
+                        </div>
+
+                        <div class="demo-grid">
+                            <button class="demo-card" onclick="runDemo('basic_rsa')">
+                                <div class="demo-icon">📝</div>
+                                <div class="demo-title">Demo 01: Basic RSA</div>
+                                <div class="demo-desc">Mã hóa, giải mã và chữ ký số</div>
+                            </button>
+                            
+                            <button class="demo-card" onclick="runDemo('miller_rabin')">
+                                <div class="demo-icon">🔢</div>
+                                <div class="demo-title">Demo 02: Miller-Rabin</div>
+                                <div class="demo-desc">Kiểm tra số nguyên tố</div>
+                            </button>
+                            
+                            <button class="demo-card" onclick="runDemo('crt_speed')">
+                                <div class="demo-icon">⚡</div>
+                                <div class="demo-title">Demo 03: CRT Speed</div>
+                                <div class="demo-desc">Tối ưu hóa CRT</div>
+                            </button>
+                            
+                            <button class="demo-card" onclick="runDemo('pollard_rho')">
+                                <div class="demo-icon">💥</div>
+                                <div class="demo-title">Demo 04: Pollard Rho</div>
+                                <div class="demo-desc">Phá RSA yếu</div>
+                            </button>
+                            
+                            <button class="demo-card" onclick="runDemo('textbook_padding')">
+                                <div class="demo-icon">⚠️</div>
+                                <div class="demo-title">Demo 05: Textbook Padding</div>
+                                <div class="demo-desc">Lỗ hổng RSA không padding</div>
+                            </button>
+                        </div>
+
+                        <div class="output" id="demoOutput" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Menu navigation
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const section = item.dataset.section;
+                
+                document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                document.getElementById(section).classList.add('active');
+            });
+        });
+
+        // Store generated keys
+        let currentKeys = null;
+
+        async function generateKey() {
+            const bits = parseInt(document.getElementById('keyBits').value);
+            const output = document.getElementById('keyOutput');
+            
+            output.innerHTML = '<div class="output">Generating keys... <span class="loading"></span></div>';
+            
+            try {
+                const response = await fetch('/api/key/generate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({bits})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentKeys = data.data;
+                    const {public_key, private_key} = data.data;
+                    
+                    output.innerHTML = `
+                        <div class="output success">
+✓ Keys generated successfully!
+
+<span style="color: #60a5fa; font-weight: bold;">PUBLIC KEY:</span>
+  e = ${public_key.e}
+  n = ${public_key.n}
+  (${public_key.n_bits} bits)
+
+<span style="color: #f59e0b; font-weight: bold;">PRIVATE KEY:</span>
+  d = ${private_key.d}
+  p = ${private_key.p} (${private_key.p_bits} bits)
+  q = ${private_key.q} (${private_key.q_bits} bits)
+
+<span style="color: #4ade80;">✓ Keys ready for use!</span>
+                        </div>
+                    `;
+                    
+                    // Auto-fill forms
+                    document.getElementById('encryptE').value = public_key.e;
+                    document.getElementById('encryptN').value = public_key.n;
+                    document.getElementById('decryptD').value = private_key.d;
+                    document.getElementById('decryptN').value = private_key.n;
+                    document.getElementById('signD').value = private_key.d;
+                    document.getElementById('signN').value = private_key.n;
+                    document.getElementById('verifyE').value = public_key.e;
+                    document.getElementById('verifyN').value = public_key.n;
+                } else {
+                    output.innerHTML = `<div class="output error">✗ Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                output.innerHTML = `<div class="output error">✗ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function encryptMessage() {
+            const message = document.getElementById('encryptMessage').value;
+            const e = document.getElementById('encryptE').value;
+            const n = document.getElementById('encryptN').value;
+            const output = document.getElementById('encryptOutput');
+            
+            if (!message || !e || !n) {
+                output.innerHTML = '<div class="output error">✗ Please fill all fields</div>';
+                return;
+            }
+            
+            output.innerHTML = '<div class="output">Encrypting... <span class="loading"></span></div>';
+            
+            try {
+                const response = await fetch('/api/crypto/encrypt', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message, e, n})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const result = data.data;
+                    output.innerHTML = `
+                        <div class="output success">
+✓ Message encrypted successfully!
+
+Original: "${message}"
+Number of blocks: ${result.num_blocks}
+
+Ciphertext:
+${result.ciphertext.join(',\n')}
+
+<span style="color: #4ade80;">✓ Copy ciphertext to decrypt!</span>
+                        </div>
+                    `;
+                    
+                    document.getElementById('decryptCiphertext').value = result.ciphertext.join(', ');
+                } else {
+                    output.innerHTML = `<div class="output error">✗ Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                output.innerHTML = `<div class="output error">✗ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function decryptMessage() {
+            const ciphertextStr = document.getElementById('decryptCiphertext').value;
+            const d = document.getElementById('decryptD').value;
+            const n = document.getElementById('decryptN').value;
+            const output = document.getElementById('decryptOutput');
+            
+            if (!ciphertextStr || !d || !n) {
+                output.innerHTML = '<div class="output error">✗ Please fill all fields</div>';
+                return;
+            }
+            
+            const ciphertext = ciphertextStr.split(',').map(s => s.trim());
+            
+            output.innerHTML = '<div class="output">Decrypting... <span class="loading"></span></div>';
+            
+            try {
+                const response = await fetch('/api/crypto/decrypt', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ciphertext, d, n})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const result = data.data;
+                    output.innerHTML = `
+                        <div class="output success">
+✓ Message decrypted successfully!
+
+Plaintext: "${result.plaintext}"
+
+<span style="color: #4ade80;">✓ Decryption complete!</span>
+                        </div>
+                    `;
+                } else {
+                    output.innerHTML = `<div class="output error">✗ Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                output.innerHTML = `<div class="output error">✗ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function signMessage() {
+            const message = document.getElementById('signMessage').value;
+            const d = document.getElementById('signD').value;
+            const n = document.getElementById('signN').value;
+            const output = document.getElementById('signOutput');
+            
+            if (!message || !d || !n) {
+                output.innerHTML = '<div class="output error">✗ Please fill all fields</div>';
+                return;
+            }
+            
+            output.innerHTML = '<div class="output">Signing... <span class="loading"></span></div>';
+            
+            try {
+                const response = await fetch('/api/crypto/sign', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message, d, n})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const signature = data.data.signature;
+                    output.innerHTML = `
+                        <div class="output success">
+✓ Message signed successfully!
+
+Message: "${message}"
+Signature: ${signature.substring(0, 100)}...
+
+<span style="color: #4ade80;">✓ Copy signature to verify!</span>
+                        </div>
+                    `;
+                    
+                    document.getElementById('verifyMessage').value = message;
+                    document.getElementById('verifySignature').value = signature;
+                } else {
+                    output.innerHTML = `<div class="output error">✗ Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                output.innerHTML = `<div class="output error">✗ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function verifySignature() {
+            const message = document.getElementById('verifyMessage').value;
+            const signature = document.getElementById('verifySignature').value;
+            const e = document.getElementById('verifyE').value;
+            const n = document.getElementById('verifyN').value;
+            const output = document.getElementById('verifyOutput');
+            
+            if (!message || !signature || !e || !n) {
+                output.innerHTML = '<div class="output error">✗ Please fill all fields</div>';
+                return;
+            }
+            
+            output.innerHTML = '<div class="output">Verifying... <span class="loading"></span></div>';
+            
+            try {
+                const response = await fetch('/api/crypto/verify', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message, signature, e, n})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const valid = data.data.valid;
+                    const status = valid ? 
+                        '<span class="success">✓ SIGNATURE VALID</span>' : 
+                        '<span class="error">✗ SIGNATURE INVALID</span>';
+                    
+                    output.innerHTML = `
+                        <div class="output">
+${status}
+
+Message: "${message}"
+
+${valid ? 
+    '<span class="success">✓ The signature is authentic!</span>' : 
+    '<span class="error">✗ The signature is invalid or tampered!</span>'}
+                        </div>
+                    `;
+                } else {
+                    output.innerHTML = `<div class="output error">✗ Error: ${data.error}</div>`;
+                }
+            } catch (error) {
+                output.innerHTML = `<div class="output error">✗ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function runDemo(demoName) {
+            const output = document.getElementById('demoOutput');
+            output.style.display = 'block';
+            output.innerHTML = 'Running demo... <span class="loading"></span>';
+            
+            try {
+                const response = await fetch(`/api/demo/${demoName}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    output.innerHTML = data.data.output;
+                } else {
+                    output.innerHTML = `<span class="error">✗ Error: ${data.error}</span>`;
+                }
+            } catch (error) {
+                output.innerHTML = `<span class="error">✗ Error: ${error.message}</span>`;
+            }
+        }
+    </script>
+</body>
+</html>
