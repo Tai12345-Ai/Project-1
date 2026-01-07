@@ -1,0 +1,102 @@
+# rsa_tool/README.md
+# RSA Cryptography Tool - Web Interface
+
+Web-based tool for demonstrating RSA cryptographic operations based on CLRS Chapter 31.
+
+## Project Structure
+rsa_tool/
+├── app.py # Main application entry point
+├── config/ # Configuration
+│ └── settings.py
+├── controllers/ # Route handlers (MVC Controllers)
+│ ├── key_controller.py
+│ ├── crypto_controller.py
+│ ├── demo_controller.py
+│ └── view_controller.py
+├── services/ # Business logic (MVC Model)
+│ ├── rsa_service.py
+│ ├── demo_service.py
+│ └── utils_service.py
+├── models/ # Data models
+│ └── response_model.py
+├── views/ # HTML templates (MVC View)
+│ ├── layouts/
+│ ├── components/
+│ └── pages/
+└── static/ # CSS, JS, Images
+├── css/
+├── js/
+└── images/
+
+
+## Installation
+
+1. Install dependencies:
+```bash
+cd d:\projects\Project-1
+pip install -r requirements.txt
+```
+
+# Project-1 Structure
+
+```
+Project-1/
+│
+├── Algorithms/              # Core algorithms (đã có)
+│   ├── __init__.py
+│   ├── rsa.py
+│   ├── utilities.py
+│   └── pollard_rho.py
+│
+├── demo/                    # CLI demos (đã có)
+│   ├── demo_01_basic_rsa.py
+│   ├── demo_02_miller_rabin.py
+│   ├── demo_03_crt_speed.py
+│   ├── demo_04_pollard_rho_break_rsa.py
+│   └── demo_05_textbook_padding_note.py
+│
+├── rsa_tool/                # Web Tool (MỚI)
+│   ├── app.py
+│   ├── __init__.py
+│   │
+│   ├── config/
+│   │   └── settings.py
+│   │
+│   ├── controllers/
+│   │   ├── __init__.py
+│   │   ├── key_controller.py
+│   │   ├── crypto_controller.py
+│   │   ├── demo_controller.py
+│   │   └── view_controller.py
+│   │
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── rsa_service.py
+│   │   ├── demo_service.py
+│   │   └── utils_service.py
+│   │
+│   ├── models/
+│   │   ├── __init__.py
+│   │   └── response_model.py
+│   │
+│   ├── views/
+│   │   ├── layouts/
+│   │   │   └── base.html
+│   │   ├── components/
+│   │   │   ├── header.html
+│   │   │   └── sidebar.html
+│   │   └── pages/
+│   │       └── index.html
+│   │
+│   └── static/
+│       ├── css/
+│       │   ├── main.css
+│       │   └── components.css
+│       └── js/
+│           ├── api.js
+│           ├── ui.js
+│           └── main.js
+│
+├── requirements.txt
+└── README.md
+```
