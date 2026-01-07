@@ -1,114 +1,95 @@
-# rsa_tool/services/rsa_service.py
 """
-RSA Service - Business logic for RSA operations
+RSA Service - Business Logic Layer
+Xử lý các thao tác RSA operations
 """
 import sys
 import os
-from typing import Tuple, List, Optional
 
-# Add parent directories to path to import Algorithms
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+# Add parent directory to import Algorithms
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from Algorithms.rsa import keygen, RSA, PublicKey, PrivateKey
 from Algorithms.utilities import modinv
 import time
 
-# Import from parent package
-import sys
-import os
-parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if parent_dir not in sys.path:
-    sys.path.insert(0, parent_dir)
-
-from models import KeyPairResponse, EncryptResponse, DecryptResponse
-
 class RSAService:
-    """Service for RSA cryptographic operations"""
+    """
+    Service xử lý các thao tác RSA
+    
+    Mục đích: Tách business logic ra khỏi routes
+    """
     
     @staticmethod
-    def generate_keypair(bits: int = 1024, e: int = 65537) -> KeyPairResponse:
+    def generate_keys(bits=1024, e=65537):
         """
-        Generate RSA key pair
+        Sinh cặp khóa RSA
         
         Args:
-            bits: Key size in bits
-            e: Public exponent (default 65537)
+            bits: Độ dài key (512-4096)
+            e: Public exponent
             
         Returns:
-            KeyPairResponse with public and private keys
+            dict: {'public_key': {...}, 'private_key': {...}}
         """
         pub, priv = keygen(bits=bits, e=e)
         
-        public_key = {
-            'e': str(pub.e),
-            'n': str(pub.n),
-            'n_bits': pub.n.bit_length()
+        return {
+            'public_key': {
+                'e': str(pub.e),
+                'n': str(pub.n),
+                'n_bits': pub.n.bit_length()
+            },
+            'private_key': {
+                'd': str(priv.d),
+                'n': str(priv.n),
+                'p': str(priv.p),
+                'q': str(priv.q),
+                'p_bits': priv.p.bit_length(),
+                'q_bits': priv.q.bit_length()
+            }
         }
-        
-        private_key = {
-            'd': str(priv.d),
-            'n': str(priv.n),
-            'p': str(priv.p),
-            'q': str(priv.q),
-            'p_bits': priv.p.bit_length(),
-            'q_bits': priv.q.bit_length(),
-            'dp': str(priv.dp) if priv.dp else None,
-            'dq': str(priv.dq) if priv.dq else None,
-            'qinv': str(priv.qinv) if priv.qinv else None
-        }
-        
-        return KeyPairResponse(public_key=public_key, private_key=private_key)
     
     @staticmethod
-    def encrypt_message(message: str, e: int, n: int) -> EncryptResponse:
+    def encrypt(message, e, n):
         """
-        Encrypt a message with RSA public key
+        Mã hóa message bằng public key
         
         Args:
-            message: Plaintext message
+            message: Text cần mã hóa
             e: Public exponent
             n: Modulus
             
         Returns:
-            EncryptResponse with ciphertext blocks
+            dict: {'ciphertext': [...], 'num_blocks': int, ...}
         """
         pub = PublicKey(e=e, n=n)
         rsa = RSA(pub=pub, priv=None)
-        
         ciphertext_blocks = rsa.encrypt_text(message)
         
-        return EncryptResponse(
-            ciphertext=[str(c) for c in ciphertext_blocks],
-            num_blocks=len(ciphertext_blocks),
-            original_length=len(message)
-        )
+        return {
+            'ciphertext': [str(c) for c in ciphertext_blocks],
+            'num_blocks': len(ciphertext_blocks),
+            'original_length': len(message)
+        }
     
     @staticmethod
-    def decrypt_message(
-        ciphertext: List[int], 
-        d: int, 
-        n: int,
-        p: Optional[int] = None,
-        q: Optional[int] = None,
-        use_crt: bool = False
-    ) -> DecryptResponse:
+    def decrypt(ciphertext, d, n, p=None, q=None, use_crt=False):
         """
-        Decrypt a message with RSA private key
+        Giải mã ciphertext bằng private key
         
         Args:
-            ciphertext: List of ciphertext blocks
+            ciphertext: List of encrypted blocks
             d: Private exponent
             n: Modulus
-            p: Prime p (optional, for CRT)
-            q: Prime q (optional, for CRT)
-            use_crt: Whether to use CRT optimization
+            p, q: Primes (optional, for CRT)
+            use_crt: Có dùng CRT optimization không
             
         Returns:
-            DecryptResponse with plaintext
+            dict: {'plaintext': str, 'use_crt': bool, 'time_ms': float}
         """
-        pub = PublicKey(e=65537, n=n)  # e doesn't matter for decryption
+        pub = PublicKey(e=65537, n=n)
         
-        # Create private key with or without CRT parameters
+        # Tạo private key (có hoặc không CRT)
         if p and q and use_crt:
             dp = d % (p - 1)
             dq = d % (q - 1)
@@ -119,52 +100,49 @@ class RSAService:
         
         rsa = RSA(pub=pub, priv=priv)
         
-        # Measure time if using CRT
-        start_time = time.perf_counter()
+        # Đo thời gian nếu dùng CRT
+        start = time.perf_counter()
         plaintext = rsa.decrypt_text(ciphertext)
-        end_time = time.perf_counter()
+        elapsed = time.perf_counter() - start
         
-        time_ms = (end_time - start_time) * 1000 if use_crt else None
-        
-        return DecryptResponse(
-            plaintext=plaintext,
-            use_crt=use_crt,
-            time_ms=time_ms
-        )
+        return {
+            'plaintext': plaintext,
+            'use_crt': use_crt,
+            'time_ms': elapsed * 1000 if use_crt else None
+        }
     
     @staticmethod
-    def sign_message(message: str, d: int, n: int) -> int:
+    def sign(message, d, n):
         """
-        Sign a message with RSA private key
+        Ký số message bằng private key
         
         Args:
-            message: Message to sign
+            message: Text cần ký
             d: Private exponent
             n: Modulus
             
         Returns:
-            Signature as integer
+            int: Signature
         """
         pub = PublicKey(e=65537, n=n)
         priv = PrivateKey(d=d, n=n)
         rsa = RSA(pub=pub, priv=priv)
         
-        signature = rsa.sign(message.encode('utf-8'))
-        return signature
+        return rsa.sign(message.encode('utf-8'))
     
     @staticmethod
-    def verify_signature(message: str, signature: int, e: int, n: int) -> bool:
+    def verify(message, signature, e, n):
         """
-        Verify RSA signature
+        Xác minh chữ ký
         
         Args:
-            message: Original message
-            signature: Signature to verify
+            message: Text gốc
+            signature: Chữ ký cần verify
             e: Public exponent
             n: Modulus
             
         Returns:
-            True if signature is valid, False otherwise
+            bool: True nếu hợp lệ
         """
         pub = PublicKey(e=e, n=n)
         rsa = RSA(pub=pub, priv=None)

@@ -1,94 +1,92 @@
 """
-RSA Cryptography Tool - Simplified Single File Version
-All-in-one application for easy deployment
+RSA Cryptography Tool - Main Application
+Kiến trúc: app.py (routes) → services.py (logic) → demos.py (demonstrations)
 """
 from flask import Flask, render_template, request, jsonify
 import sys
 import os
-import io
-from contextlib import redirect_stdout
-import time
-import secrets
 
-# Add parent directory to path to import Algorithms
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add current directory to path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, current_dir)
 
-from Algorithms.rsa import keygen, RSA, PublicKey, PrivateKey
-from Algorithms.utilities import is_probable_prime, generate_prime, gcd, modinv
-from Algorithms.pollard_rho import factor_semiprime
+# Import local modules
+from services import RSAService
+from demos import DemoService
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'dev-secret-key'
+app.config['SECRET_KEY'] = 'dev-secret-key-rsa-tool'
 app.config['DEBUG'] = True
 
 # ==================== ROUTES ====================
 
 @app.route('/')
 def index():
-    """Main page"""
+    """Trang chủ - Main page"""
     return render_template('index.html')
 
 @app.route('/api/key/generate', methods=['POST'])
 def generate_key():
-    """Generate RSA key pair"""
+    """
+    API: Sinh cặp khóa RSA
+    
+    POST /api/key/generate
+    Body: {"bits": 1024, "e": 65537}
+    Returns: {"success": true, "data": {"public_key": {...}, "private_key": {...}}}
+    """
     try:
         data = request.json or {}
         bits = int(data.get('bits', 1024))
         e = int(data.get('e', 65537))
         
+        # Validation
         if bits < 512 or bits > 4096:
             raise ValueError("Key size must be between 512 and 4096 bits")
         
-        pub, priv = keygen(bits=bits, e=e)
+        # Generate keys using service
+        result = RSAService.generate_keys(bits=bits, e=e)
         
         return jsonify({
             'success': True,
-            'data': {
-                'public_key': {
-                    'e': str(pub.e),
-                    'n': str(pub.n),
-                    'n_bits': pub.n.bit_length()
-                },
-                'private_key': {
-                    'd': str(priv.d),
-                    'n': str(priv.n),
-                    'p': str(priv.p),
-                    'q': str(priv.q),
-                    'p_bits': priv.p.bit_length(),
-                    'q_bits': priv.q.bit_length()
-                }
-            }
+            'data': result
         })
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as err:
+        return jsonify({'success': False, 'error': str(err)}), 400
 
 @app.route('/api/crypto/encrypt', methods=['POST'])
 def encrypt():
-    """Encrypt message"""
+    """
+    API: Mã hóa message
+    
+    POST /api/crypto/encrypt
+    Body: {"message": "text", "e": "65537", "n": "123..."}
+    """
     try:
         data = request.json
         message = data.get('message', '')
         e = int(data.get('e'))
         n = int(data.get('n'))
         
-        pub = PublicKey(e=e, n=n)
-        rsa = RSA(pub=pub, priv=None)
-        ciphertext_blocks = rsa.encrypt_text(message)
+        if not message:
+            raise ValueError("Message cannot be empty")
+        
+        result = RSAService.encrypt(message, e, n)
         
         return jsonify({
             'success': True,
-            'data': {
-                'ciphertext': [str(c) for c in ciphertext_blocks],
-                'num_blocks': len(ciphertext_blocks),
-                'original_length': len(message)
-            }
+            'data': result
         })
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as err:
+        return jsonify({'success': False, 'error': str(err)}), 400
 
 @app.route('/api/crypto/decrypt', methods=['POST'])
 def decrypt():
-    """Decrypt ciphertext"""
+    """
+    API: Giải mã ciphertext
+    
+    POST /api/crypto/decrypt
+    Body: {"ciphertext": ["123", "456"], "d": "789", "n": "101112"}
+    """
     try:
         data = request.json
         ciphertext = [int(c) for c in data.get('ciphertext', [])]
@@ -98,58 +96,52 @@ def decrypt():
         q = int(data.get('q', 0)) or None
         use_crt = data.get('use_crt', False)
         
-        pub = PublicKey(e=65537, n=n)
+        if not ciphertext:
+            raise ValueError("Ciphertext cannot be empty")
         
-        if p and q and use_crt:
-            dp = d % (p - 1)
-            dq = d % (q - 1)
-            qinv = modinv(q, p)
-            priv = PrivateKey(d=d, n=n, p=p, q=q, dp=dp, dq=dq, qinv=qinv)
-        else:
-            priv = PrivateKey(d=d, n=n)
-        
-        rsa = RSA(pub=pub, priv=priv)
-        
-        start_time = time.perf_counter()
-        plaintext = rsa.decrypt_text(ciphertext)
-        end_time = time.perf_counter()
+        result = RSAService.decrypt(ciphertext, d, n, p, q, use_crt)
         
         return jsonify({
             'success': True,
-            'data': {
-                'plaintext': plaintext,
-                'use_crt': use_crt,
-                'time_ms': (end_time - start_time) * 1000 if use_crt else None
-            }
+            'data': result
         })
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as err:
+        return jsonify({'success': False, 'error': str(err)}), 400
 
 @app.route('/api/crypto/sign', methods=['POST'])
 def sign():
-    """Sign message"""
+    """
+    API: Ký số message
+    
+    POST /api/crypto/sign
+    Body: {"message": "text", "d": "789", "n": "101112"}
+    """
     try:
         data = request.json
         message = data.get('message', '')
         d = int(data.get('d'))
         n = int(data.get('n'))
         
-        pub = PublicKey(e=65537, n=n)
-        priv = PrivateKey(d=d, n=n)
-        rsa = RSA(pub=pub, priv=priv)
+        if not message:
+            raise ValueError("Message cannot be empty")
         
-        signature = rsa.sign(message.encode('utf-8'))
+        signature = RSAService.sign(message, d, n)
         
         return jsonify({
             'success': True,
             'data': {'signature': str(signature)}
         })
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as err:
+        return jsonify({'success': False, 'error': str(err)}), 400
 
 @app.route('/api/crypto/verify', methods=['POST'])
 def verify():
-    """Verify signature"""
+    """
+    API: Xác minh chữ ký
+    
+    POST /api/crypto/verify
+    Body: {"message": "text", "signature": "123", "e": "65537", "n": "789"}
+    """
     try:
         data = request.json
         message = data.get('message', '')
@@ -157,158 +149,103 @@ def verify():
         e = int(data.get('e'))
         n = int(data.get('n'))
         
-        pub = PublicKey(e=e, n=n)
-        rsa = RSA(pub=pub, priv=None)
+        if not message:
+            raise ValueError("Message cannot be empty")
         
-        valid = rsa.verify(message.encode('utf-8'), signature)
+        valid = RSAService.verify(message, signature, e, n)
         
         return jsonify({
             'success': True,
             'data': {'valid': valid}
         })
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 400
+    except Exception as err:
+        return jsonify({'success': False, 'error': str(err)}), 400
 
 @app.route('/api/demo/<demo_name>', methods=['GET'])
 def run_demo(demo_name):
-    """Run demonstration"""
+    """
+    API: Chạy demonstration
+    
+    GET /api/demo/<demo_name>
+    
+    Demos available:
+    - basic_rsa: Demo 01 - Basic RSA
+    - miller_rabin: Demo 02 - Miller-Rabin
+    - crt_speed: Demo 03 - CRT Speed
+    - pollard_rho: Demo 04 - Pollard Rho
+    - textbook_padding: Demo 05 - Textbook Padding
+    - wiener_attack: Demo 06 - Wiener's Attack
+    - key_size_security: Demo 07 - Key Size Security
+    - rsa_properties: Demo 08 - RSA Properties
+    """
     try:
-        output = io.StringIO()
-        
-        with redirect_stdout(output):
-            if demo_name == 'basic_rsa':
-                demo_basic_rsa()
-            elif demo_name == 'miller_rabin':
-                demo_miller_rabin()
-            elif demo_name == 'crt_speed':
-                demo_crt_speed()
-            elif demo_name == 'pollard_rho':
-                demo_pollard_rho()
-            elif demo_name == 'textbook_padding':
-                demo_textbook_padding()
-            else:
-                return jsonify({'success': False, 'error': 'Unknown demo'}), 400
+        output = DemoService.run(demo_name)
         
         return jsonify({
             'success': True,
-            'data': {'output': output.getvalue()}
+            'data': {'output': output}
         })
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+    except Exception as err:
+        return jsonify({'success': False, 'error': str(err)}), 500
 
-# ==================== DEMO FUNCTIONS ====================
-
-def demo_basic_rsa():
-    print("=== DEMO 01: Basic RSA ===\n")
-    pub_a, priv_a = keygen(bits=512)
-    pub_b, priv_b = keygen(bits=512)
+@app.route('/api/demo/list', methods=['GET'])
+def list_demos():
+    """API: Liệt kê tất cả demos"""
+    demos = [
+        {
+            'id': 'basic_rsa',
+            'title': 'Demo 01: Basic RSA',
+            'description': 'RSA encryption, decryption, signatures với step-by-step',
+            'icon': '📝'
+        },
+        {
+            'id': 'miller_rabin',
+            'title': 'Demo 02: Miller-Rabin',
+            'description': 'Primality testing và prime generation chi tiết',
+            'icon': '🔢'
+        },
+        {
+            'id': 'crt_speed',
+            'title': 'Demo 03: CRT Speed',
+            'description': 'Chinese Remainder Theorem optimization analysis',
+            'icon': '⚡'
+        },
+        {
+            'id': 'pollard_rho',
+            'title': 'Demo 04: Pollard Rho',
+            'description': 'Factorization attack trên RSA yếu',
+            'icon': '💥'
+        },
+        {
+            'id': 'textbook_padding',
+            'title': 'Demo 05: Textbook Padding',
+            'description': 'Security vulnerabilities của textbook RSA',
+            'icon': '⚠️'
+        },
+        {
+            'id': 'wiener_attack',
+            'title': 'Demo 06: Wiener\'s Attack',
+            'description': 'Attack RSA khi d quá nhỏ (continued fraction)',
+            'icon': '🎯'
+        },
+        {
+            'id': 'key_size_security',
+            'title': 'Demo 07: Key Size Security',
+            'description': 'Phân tích security theo key size và performance',
+            'icon': '🔐'
+        },
+        {
+            'id': 'rsa_properties',
+            'title': 'Demo 08: RSA Properties',
+            'description': 'Mathematical properties: homomorphic, CRT, etc.',
+            'icon': '🧮'
+        }
+    ]
     
-    alice = RSA(pub=pub_a, priv=priv_a)
-    bob = RSA(pub=pub_b, priv=priv_b)
-    
-    print(f"Alice's key: n = {pub_a.n.bit_length()} bits\n")
-    
-    msg = "Hello Alice!"
-    print(f"Message: '{msg}'")
-    
-    c = alice.encrypt_text(msg)
-    print(f"Encrypted blocks: {len(c)}")
-    
-    p = alice.decrypt_text(c)
-    print(f"Decrypted: '{p}'")
-    print(f"Match: {p == msg}\n")
-    
-    # Signature
-    sig_msg = "I owe Alice $100".encode()
-    sig = bob.sign(sig_msg)
-    print(f"\nSignature demo:")
-    print(f"Message: {sig_msg.decode()}")
-    print(f"Valid: {bob.verify(sig_msg, sig)}")
-
-def demo_miller_rabin():
-    print("=== DEMO 02: Miller-Rabin ===\n")
-    tests = [(2, "prime"), (17, "prime"), (21, "composite"), (561, "Carmichael")]
-    
-    for n, desc in tests:
-        result = is_probable_prime(n, rounds=20)
-        status = "PRIME" if result else "COMPOSITE"
-        print(f"{n:6d} -> {status:12s} ({desc})")
-    
-    print(f"\nGenerating 256-bit prime...")
-    t0 = time.perf_counter()
-    p = generate_prime(256, rounds=20)
-    t1 = time.perf_counter()
-    print(f"Generated: {str(p)[:50]}...")
-    print(f"Time: {(t1-t0)*1000:.2f} ms")
-
-def demo_crt_speed():
-    print("=== DEMO 03: CRT Speed ===\n")
-    pub, priv = keygen(bits=1024)
-    rsa = RSA(pub=pub, priv=priv)
-    
-    message = ("CRT test " * 10).encode()
-    c = rsa.encrypt_bytes(message)
-    
-    iterations = 10
-    
-    t0 = time.perf_counter()
-    for _ in range(iterations):
-        rsa.decrypt_bytes(c, use_crt=False)
-    t1 = time.perf_counter()
-    
-    t2 = time.perf_counter()
-    for _ in range(iterations):
-        rsa.decrypt_bytes(c, use_crt=True)
-    t3 = time.perf_counter()
-    
-    normal = t1 - t0
-    crt = t3 - t2
-    
-    print(f"Normal: {normal:.4f}s")
-    print(f"CRT:    {crt:.4f}s")
-    if crt > 0:
-        print(f"Speedup: {normal/crt:.2f}x")
-
-def demo_pollard_rho():
-    print("=== DEMO 04: Pollard Rho ===\n")
-    bits = 96
-    
-    p = generate_prime(bits // 2, rounds=20)
-    q = generate_prime(bits // 2, rounds=20)
-    n = p * q
-    
-    print(f"Weak RSA ({bits} bits)")
-    print(f"p = {p}")
-    print(f"q = {q}")
-    print(f"n = {n}\n")
-    
-    print("Factoring...")
-    t0 = time.perf_counter()
-    pq = factor_semiprime(n)
-    t1 = time.perf_counter()
-    
-    if pq:
-        print(f"✓ Factored! Found p={pq[0]}, q={pq[1]}")
-        print(f"Time: {(t1-t0)*1000:.2f} ms")
-        print("RSA is broken!")
-
-def demo_textbook_padding():
-    print("=== DEMO 05: Textbook Padding ===\n")
-    pub, priv = keygen(bits=512)
-    rsa = RSA(pub=pub, priv=priv)
-    
-    msg = b"same message"
-    c1 = rsa.encrypt_bytes(msg)
-    c2 = rsa.encrypt_bytes(msg)
-    
-    print(f"Message: {msg}")
-    print(f"Same ciphertext? {c1 == c2}")
-    
-    if c1 == c2:
-        print("\n⚠️ SECURITY ISSUE!")
-        print("- Deterministic encryption")
-        print("- Vulnerable to attacks")
-        print("- Use OAEP padding in practice")
+    return jsonify({
+        'success': True,
+        'data': {'demos': demos}
+    })
 
 # ==================== MAIN ====================
 
