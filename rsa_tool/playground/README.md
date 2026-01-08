@@ -388,7 +388,7 @@ def run(params):
 ## 👨‍💻 Thông Tin
 
 **Tác giả:** Đỗ Văn Tài  
-**Email:** dovantai2203@gmail.com  
+**Email:** lucdoka1245@gmail.com  
 **Mục đích:** Nghiên cứu và giáo dục mật mã học  
 
 **Last Updated:** January 8, 2026  
