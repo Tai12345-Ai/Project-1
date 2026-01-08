@@ -92,11 +92,44 @@ def decrypt():
     try:
         data = request.json
         ciphertext = data.get('ciphertext')
+        
+        # Validate ciphertext first
+        if not ciphertext:
+            raise ValueError("Ciphertext cannot be empty")
+        
         # Handle both int and list
         if isinstance(ciphertext, list):
-            ciphertext = [int(c) for c in ciphertext]
+            if len(ciphertext) == 0:
+                raise ValueError("Ciphertext list cannot be empty")
+            # Convert each element, handling scientific notation
+            converted = []
+            for c in ciphertext:
+                if c and str(c).strip():
+                    c_str = str(c).strip()
+                    # Handle scientific notation
+                    if 'e' in c_str.lower():
+                        try:
+                            c_int = int(float(c_str))
+                        except:
+                            raise ValueError(f"Invalid ciphertext value: {c_str}")
+                    else:
+                        c_int = int(c_str)
+                    converted.append(c_int)
+            if len(converted) == 0:
+                raise ValueError("No valid ciphertext values provided")
+            ciphertext = converted
         else:
-            ciphertext = int(ciphertext)
+            ciphertext_str = str(ciphertext).strip()
+            if not ciphertext_str:
+                raise ValueError("Ciphertext cannot be empty")
+            # Handle scientific notation
+            if 'e' in ciphertext_str.lower():
+                try:
+                    ciphertext = int(float(ciphertext_str))
+                except:
+                    raise ValueError(f"Invalid ciphertext format: {ciphertext_str}")
+            else:
+                ciphertext = int(ciphertext_str)
         
         d = int(data.get('d'))
         n = int(data.get('n'))
@@ -105,17 +138,16 @@ def decrypt():
         use_crt = data.get('use_crt', False)
         padding_mode = data.get('padding_mode', 'textbook')
         
-        if not ciphertext:
-            raise ValueError("Ciphertext cannot be empty")
-        
         result = RSAService.decrypt_with_padding(ciphertext, d, n, padding_mode, p, q, use_crt)
         
         return jsonify({
             'success': True,
             'data': result
         })
-    except Exception as err:
+    except ValueError as err:
         return jsonify({'success': False, 'error': str(err)}), 400
+    except Exception as err:
+        return jsonify({'success': False, 'error': f'Decryption failed: {str(err)}'}), 400
 
 @app.route('/api/crypto/sign', methods=['POST'])
 def sign():
@@ -250,6 +282,12 @@ def list_demos():
             'title': 'Demo 08: RSA Properties',
             'description': 'Mathematical properties: homomorphic, CRT, etc.',
             'icon': '🧮'
+        },
+        {
+            'id': 'padding_comparison',
+            'title': 'Demo 09: Padding Comparison',
+            'description': 'So sánh Textbook vs OAEP vs PSS - Security analysis',
+            'icon': '🔒'
         }
     ]
     

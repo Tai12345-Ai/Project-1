@@ -429,6 +429,14 @@
                             <textarea id="encryptN" placeholder="Enter public modulus n"></textarea>
                         </div>
 
+                        <div class="form-group">
+                            <label for="encryptPadding">Padding Mode:</label>
+                            <select id="encryptPadding">
+                                <option value="textbook">Textbook (No padding - Không an toàn)</option>
+                                <option value="oaep" selected>OAEP (Recommended - An toàn)</option>
+                            </select>
+                        </div>
+
                         <button onclick="encryptMessage()">Encrypt</button>
 
                         <div id="encryptOutput"></div>
@@ -459,6 +467,14 @@
                             <textarea id="decryptN" placeholder="Enter modulus n"></textarea>
                         </div>
 
+                        <div class="form-group">
+                            <label for="decryptPadding">Padding Mode:</label>
+                            <select id="decryptPadding">
+                                <option value="textbook">Textbook (No padding)</option>
+                                <option value="oaep" selected>OAEP (Recommended)</option>
+                            </select>
+                        </div>
+
                         <button onclick="decryptMessage()">Decrypt</button>
 
                         <div id="decryptOutput"></div>
@@ -487,6 +503,14 @@
                         <div class="form-group">
                             <label for="signN">Modulus (n):</label>
                             <textarea id="signN" placeholder="Enter modulus n"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="signPadding">Padding Mode:</label>
+                            <select id="signPadding">
+                                <option value="textbook">Textbook (No padding - Không an toàn)</option>
+                                <option value="pss" selected>PSS (Recommended - An toàn)</option>
+                            </select>
                         </div>
 
                         <button onclick="signMessage()">Sign</button>
@@ -522,6 +546,14 @@
                         <div class="form-group">
                             <label for="verifyN">Modulus (n):</label>
                             <textarea id="verifyN" placeholder="Enter public modulus n"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="verifyPadding">Padding Mode:</label>
+                            <select id="verifyPadding">
+                                <option value="textbook">Textbook (No padding)</option>
+                                <option value="pss" selected>PSS (Recommended)</option>
+                            </select>
                         </div>
 
                         <button onclick="verifySignature()">Verify</button>
@@ -586,6 +618,12 @@
                                 <div class="demo-icon">🧮</div>
                                 <div class="demo-title">Demo 08: RSA Properties</div>
                                 <div class="demo-desc">Tính chất toán học của RSA</div>
+                            </button>
+                            
+                            <button class="demo-card" onclick="runDemo('padding_comparison')">
+                                <div class="demo-icon">🔒</div>
+                                <div class="demo-title">Demo 09: Padding Comparison</div>
+                                <div class="demo-desc">So sánh Textbook vs OAEP vs PSS</div>
                             </button>
                         </div>
 
@@ -728,6 +766,7 @@
             const message = document.getElementById('encryptMessage').value;
             const e = document.getElementById('encryptE').value;
             const n = document.getElementById('encryptN').value;
+            const padding_mode = document.getElementById('encryptPadding').value;
             const output = document.getElementById('encryptOutput');
             
             if (!message || !e || !n) {
@@ -741,28 +780,44 @@
                 const response = await fetch('/api/crypto/encrypt', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({message, e, n})
+                    body: JSON.stringify({message, e, n, padding_mode})
                 });
                 
                 const data = await response.json();
                 
                 if (data.success) {
                     const result = data.data;
+                    // Handle both single ciphertext (OAEP) and array (textbook)
+                    // Convert to string to avoid scientific notation
+                    const ciphertextDisplay = Array.isArray(result.ciphertext) 
+                        ? result.ciphertext.map(c => String(c)).join(',\n') 
+                        : String(result.ciphertext);
+                    const ciphertextValue = Array.isArray(result.ciphertext)
+                        ? result.ciphertext.map(c => String(c)).join(', ')
+                        : String(result.ciphertext);
+                    
                     output.innerHTML = `
                         <div class="output success">
 ✓ Message encrypted successfully!
 
 Original: "${message}"
-Number of blocks: ${result.num_blocks}
+Padding Mode: ${result.mode || 'Textbook RSA'}
+${result.num_blocks ? `Number of blocks: ${result.num_blocks}` : ''}
 
 Ciphertext:
-${result.ciphertext.join(',\n')}
+${ciphertextDisplay}
+
+${result.security_level ? `<div style="margin-top: 10px; padding: 10px; background: #1e293b; border-radius: 5px;">
+Security: ${result.security_level}
+</div>` : ''}
 
 <span style="color: #4ade80;">✓ Copy ciphertext to decrypt!</span>
                         </div>
                     `;
                     
-                    document.getElementById('decryptCiphertext').value = result.ciphertext.join(', ');
+                    document.getElementById('decryptCiphertext').value = ciphertextValue;
+                    // Also set the padding mode to match
+                    document.getElementById('decryptPadding').value = padding_mode;
                 } else {
                     output.innerHTML = `<div class="output error">✗ Error: ${data.error}</div>`;
                 }
@@ -775,6 +830,7 @@ ${result.ciphertext.join(',\n')}
             const ciphertextStr = document.getElementById('decryptCiphertext').value;
             const d = document.getElementById('decryptD').value;
             const n = document.getElementById('decryptN').value;
+            const padding_mode = document.getElementById('decryptPadding').value;
             const output = document.getElementById('decryptOutput');
             
             if (!ciphertextStr || !d || !n) {
@@ -782,7 +838,13 @@ ${result.ciphertext.join(',\n')}
                 return;
             }
             
-            const ciphertext = ciphertextStr.split(',').map(s => s.trim());
+            // Handle both single value (OAEP) and comma-separated list (textbook)
+            let ciphertext;
+            if (ciphertextStr.includes(',')) {
+                ciphertext = ciphertextStr.split(',').map(s => s.trim());
+            } else {
+                ciphertext = ciphertextStr.trim();
+            }
             
             output.innerHTML = '<div class="output">Decrypting... <span class="loading"></span></div>';
             
@@ -790,7 +852,7 @@ ${result.ciphertext.join(',\n')}
                 const response = await fetch('/api/crypto/decrypt', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ciphertext, d, n})
+                    body: JSON.stringify({ciphertext, d, n, padding_mode})
                 });
                 
                 const data = await response.json();
@@ -802,6 +864,11 @@ ${result.ciphertext.join(',\n')}
 ✓ Message decrypted successfully!
 
 Plaintext: "${result.plaintext}"
+Padding Mode: ${result.mode || 'Textbook RSA'}
+
+${result.security_level ? `<div style="margin-top: 10px; padding: 10px; background: #1e293b; border-radius: 5px;">
+Security: ${result.security_level}
+</div>` : ''}
 
 <span style="color: #4ade80;">✓ Decryption complete!</span>
                         </div>
@@ -818,6 +885,7 @@ Plaintext: "${result.plaintext}"
             const message = document.getElementById('signMessage').value;
             const d = document.getElementById('signD').value;
             const n = document.getElementById('signN').value;
+            const padding_mode = document.getElementById('signPadding').value;
             const output = document.getElementById('signOutput');
             
             if (!message || !d || !n) {
@@ -831,19 +899,25 @@ Plaintext: "${result.plaintext}"
                 const response = await fetch('/api/crypto/sign', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({message, d, n})
+                    body: JSON.stringify({message, d, n, padding_mode})
                 });
                 
                 const data = await response.json();
                 
                 if (data.success) {
-                    const signature = data.data.signature;
+                    const result = data.data;
+                    const signature = result.signature;
                     output.innerHTML = `
                         <div class="output success">
 ✓ Message signed successfully!
 
 Message: "${message}"
+Padding Mode: ${result.mode || 'Textbook RSA'}
 Signature: ${signature.substring(0, 100)}...
+
+${result.security_level ? `<div style="margin-top: 10px; padding: 10px; background: #1e293b; border-radius: 5px;">
+Security: ${result.security_level}
+</div>` : ''}
 
 <span style="color: #4ade80;">✓ Copy signature to verify!</span>
                         </div>
@@ -851,6 +925,13 @@ Signature: ${signature.substring(0, 100)}...
                     
                     document.getElementById('verifyMessage').value = message;
                     document.getElementById('verifySignature').value = signature;
+                    // Also set the padding mode to match
+                    document.getElementById('verifyPadding').value = padding_mode;
+                    // Copy n to verify (n is same for both public and private key)
+                    document.getElementById('verifyN').value = n;
+                    // Copy e from encrypt form if available, or use default
+                    const verifyE = document.getElementById('encryptE').value || '65537';
+                    document.getElementById('verifyE').value = verifyE;
                 } else {
                     output.innerHTML = `<div class="output error">✗ Error: ${data.error}</div>`;
                 }
@@ -864,6 +945,7 @@ Signature: ${signature.substring(0, 100)}...
             const signature = document.getElementById('verifySignature').value;
             const e = document.getElementById('verifyE').value;
             const n = document.getElementById('verifyN').value;
+            const padding_mode = document.getElementById('verifyPadding').value;
             const output = document.getElementById('verifyOutput');
             
             if (!message || !signature || !e || !n) {
@@ -877,13 +959,14 @@ Signature: ${signature.substring(0, 100)}...
                 const response = await fetch('/api/crypto/verify', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({message, signature, e, n})
+                    body: JSON.stringify({message, signature, e, n, padding_mode})
                 });
                 
                 const data = await response.json();
                 
                 if (data.success) {
-                    const valid = data.data.valid;
+                    const result = data.data;
+                    const valid = result.valid;
                     const status = valid ? 
                         '<span class="success">✓ SIGNATURE VALID</span>' : 
                         '<span class="error">✗ SIGNATURE INVALID</span>';
@@ -893,6 +976,11 @@ Signature: ${signature.substring(0, 100)}...
 ${status}
 
 Message: "${message}"
+Padding Mode: ${result.mode || 'Textbook RSA'}
+
+${result.security_level ? `<div style="margin-top: 10px; padding: 10px; background: #1e293b; border-radius: 5px;">
+Security: ${result.security_level}
+</div>` : ''}
 
 ${valid ? 
     '<span class="success">✓ The signature is authentic!</span>' : 
