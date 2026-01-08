@@ -60,18 +60,19 @@ def encrypt():
     API: Mã hóa message
     
     POST /api/crypto/encrypt
-    Body: {"message": "text", "e": "65537", "n": "123..."}
+    Body: {"message": "text", "e": "65537", "n": "123...", "padding_mode": "textbook|oaep"}
     """
     try:
         data = request.json
         message = data.get('message', '')
         e = int(data.get('e'))
         n = int(data.get('n'))
+        padding_mode = data.get('padding_mode', 'textbook')
         
         if not message:
             raise ValueError("Message cannot be empty")
         
-        result = RSAService.encrypt(message, e, n)
+        result = RSAService.encrypt_with_padding(message, e, n, padding_mode)
         
         return jsonify({
             'success': True,
@@ -86,21 +87,28 @@ def decrypt():
     API: Giải mã ciphertext
     
     POST /api/crypto/decrypt
-    Body: {"ciphertext": ["123", "456"], "d": "789", "n": "101112"}
+    Body: {"ciphertext": ["123", "456"], "d": "789", "n": "101112", "padding_mode": "textbook|oaep"}
     """
     try:
         data = request.json
-        ciphertext = [int(c) for c in data.get('ciphertext', [])]
+        ciphertext = data.get('ciphertext')
+        # Handle both int and list
+        if isinstance(ciphertext, list):
+            ciphertext = [int(c) for c in ciphertext]
+        else:
+            ciphertext = int(ciphertext)
+        
         d = int(data.get('d'))
         n = int(data.get('n'))
         p = int(data.get('p', 0)) or None
         q = int(data.get('q', 0)) or None
         use_crt = data.get('use_crt', False)
+        padding_mode = data.get('padding_mode', 'textbook')
         
         if not ciphertext:
             raise ValueError("Ciphertext cannot be empty")
         
-        result = RSAService.decrypt(ciphertext, d, n, p, q, use_crt)
+        result = RSAService.decrypt_with_padding(ciphertext, d, n, padding_mode, p, q, use_crt)
         
         return jsonify({
             'success': True,
@@ -115,22 +123,23 @@ def sign():
     API: Ký số message
     
     POST /api/crypto/sign
-    Body: {"message": "text", "d": "789", "n": "101112"}
+    Body: {"message": "text", "d": "789", "n": "101112", "padding_mode": "textbook|pss"}
     """
     try:
         data = request.json
         message = data.get('message', '')
         d = int(data.get('d'))
         n = int(data.get('n'))
+        padding_mode = data.get('padding_mode', 'textbook')
         
         if not message:
             raise ValueError("Message cannot be empty")
         
-        signature = RSAService.sign(message, d, n)
+        result = RSAService.sign_with_padding(message, d, n, padding_mode)
         
         return jsonify({
             'success': True,
-            'data': {'signature': str(signature)}
+            'data': result
         })
     except Exception as err:
         return jsonify({'success': False, 'error': str(err)}), 400
@@ -141,7 +150,7 @@ def verify():
     API: Xác minh chữ ký
     
     POST /api/crypto/verify
-    Body: {"message": "text", "signature": "123", "e": "65537", "n": "789"}
+    Body: {"message": "text", "signature": "123", "e": "65537", "n": "789", "padding_mode": "textbook|pss"}
     """
     try:
         data = request.json
@@ -149,15 +158,16 @@ def verify():
         signature = int(data.get('signature'))
         e = int(data.get('e'))
         n = int(data.get('n'))
+        padding_mode = data.get('padding_mode', 'textbook')
         
         if not message:
             raise ValueError("Message cannot be empty")
         
-        valid = RSAService.verify(message, signature, e, n)
+        result = RSAService.verify_with_padding(message, signature, e, n, padding_mode)
         
         return jsonify({
             'success': True,
-            'data': {'valid': valid}
+            'data': result
         })
     except Exception as err:
         return jsonify({'success': False, 'error': str(err)}), 400
@@ -327,4 +337,4 @@ def playground_run(lab_id):
 if __name__ == '__main__':
     print("Starting RSA Tool...")
     print("Open browser at: http://127.0.0.1:5000")
-    app.run(host='127.0.0.1', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
