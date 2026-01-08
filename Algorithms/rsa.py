@@ -167,3 +167,61 @@ class RSA:
         h = bytes_to_int(hashlib.sha256(message).digest()) % self.pub.n
         h2 = modexp(signature, self.pub.e, self.pub.n)
         return h == h2
+
+    # ---- OAEP encryption (RFC 8017 PKCS#1 v2.1) ----
+    def encrypt_oaep(self, message: bytes, label: bytes = b"", hash_func=hashlib.sha256) -> int:
+        """
+        Encrypt using OAEP padding (secure, non-deterministic).
+        Returns a single integer ciphertext.
+        """
+        from .padding import oaep_encode
+        n_bits = self.pub.n.bit_length()
+        padded = oaep_encode(message, n_bits, label, hash_func)
+        m = bytes_to_int(padded)
+        return self.encrypt_int(m)
+
+    def decrypt_oaep(self, ciphertext: int, label: bytes = b"", hash_func=hashlib.sha256, use_crt: bool = False) -> bytes:
+        """
+        Decrypt OAEP-padded ciphertext.
+        Returns original message bytes.
+        """
+        from .padding import oaep_decode
+        if self.priv is None:
+            raise ValueError("No private key for decryption")
+        n_bits = self.priv.n.bit_length()
+        # Use CRT if requested and factors are available
+        if use_crt and self.priv.p and self.priv.q:
+            m = self.decrypt_int_crt(ciphertext)
+        else:
+            m = self.decrypt_int(ciphertext)
+        padded = int_to_bytes(m, (n_bits + 7) // 8)
+        return oaep_decode(padded, n_bits, label, hash_func)
+
+    # ---- PSS signature (RFC 8017 PKCS#1 v2.1) ----
+    def sign_pss(self, message: bytes, salt_length: int = 32, hash_func=hashlib.sha256) -> int:
+        """
+        Sign using PSS padding (secure, probabilistic).
+        Returns signature as integer.
+        """
+        from .padding import pss_encode
+        if self.priv is None:
+            raise ValueError("No private key for signing")
+        message_hash = hash_func(message).digest()
+        n_bits = self.priv.n.bit_length()
+        em = pss_encode(message_hash, n_bits, salt_length, hash_func)
+        m = bytes_to_int(em)
+        return modexp(m, self.priv.d, self.priv.n)
+
+    def verify_pss(self, message: bytes, signature: int, salt_length: int = 32, hash_func=hashlib.sha256) -> bool:
+        """
+        Verify PSS signature.
+        Returns True if valid, False otherwise.
+        """
+        from .padding import pss_verify
+        message_hash = hash_func(message).digest()
+        n_bits = self.pub.n.bit_length()
+        em_len = (n_bits + 7) // 8
+        # Recover EM from signature
+        m = modexp(signature, self.pub.e, self.pub.n)
+        em = int_to_bytes(m, em_len)
+        return pss_verify(message_hash, em, n_bits, salt_length, hash_func)
