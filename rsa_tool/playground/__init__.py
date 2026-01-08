@@ -138,24 +138,22 @@ class PlaygroundService:
 
 
 # Import and register implemented labs
-from . import modular_lab
+from .labs.phase1 import modular_lab, exponentiation_lab
 PlaygroundService.register_lab('modular_arithmetic', modular_lab)
+PlaygroundService.register_lab('exponentiation', exponentiation_lab)
 
-# TODO: Future labs (implement as needed)
-# from . import exponentiation_lab
-# PlaygroundService.register_lab('exponentiation', exponentiation_lab)
+from .labs.phase2 import prime_lab, rsa_parameter_lab
+PlaygroundService.register_lab('primality', prime_lab)
+PlaygroundService.register_lab('rsa_parameters', rsa_parameter_lab)
 
-# from . import prime_lab
-# PlaygroundService.register_lab('primality', prime_lab)
+# Phase 3 labs
+from .labs.phase3 import factorization_lab, rsa_attacks_lab
+PlaygroundService.register_lab('factorization', factorization_lab)
+PlaygroundService.register_lab('rsa_attacks', rsa_attacks_lab)
 
-# from . import rsa_parameter_lab
-# PlaygroundService.register_lab('rsa_parameters', rsa_parameter_lab)
-
-# from . import factorization_lab
-# PlaygroundService.register_lab('factorization', factorization_lab)
-
-# from . import rsa_attacks_lab
-# PlaygroundService.register_lab('rsa_attacks', rsa_attacks_lab)
+# Phase 4 labs (Advanced Topics)
+from .labs.phase4 import discrete_log_lab
+PlaygroundService.register_lab('discrete_logarithm', discrete_log_lab)
 
 
 __all__ = ['PlaygroundService']
