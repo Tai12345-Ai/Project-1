@@ -385,9 +385,9 @@ See [playground/LAB_TEMPLATE.py](rsa_tool/playground/LAB_TEMPLATE.py) for lab de
 If you use this tool in your research, please cite:
 
 ```bibtex
-@software{rsDo Van Tai (Đỗ Văn Tài)},
+@software{(Đỗ Văn Tài)},
   year = {2026},
-  url = {https://github.com/dovantai2203/Project-1},
+  url = {https://github.com/Tai12345-Ai/Project-1},
   note = {Implementation of CLRS Chapter 31 algorithms with 7
   url = {[Repository URL]},
   note = {Implementation of CLRS Chapter 31 algorithms with 6 research labs}
@@ -418,7 +418,7 @@ If you use this tool in your research, please cite:
 ## 👨‍💻 Thông Tin Tác Giả
 
 **Tác giả:** Đỗ Văn Tài  
-**Email:** dovantai2203@gmail.com  
+**Email:** lucdoka1245@gmail.com  
 **Mục đích:** Nghiên cứu và giáo dục về mật mã học RSA  
 **Công nghệ:** Python 3.13, Flask 3.0, CLRS Chapter 31  
 
