@@ -10,6 +10,7 @@ from .demo_05_textbook_padding import demo_textbook_padding
 from .demo_06_wiener_attack import demo_wiener_attack
 from .demo_07_key_size_security import demo_key_size_security
 from .demo_08_rsa_properties import demo_rsa_properties
+from .demo_09_padding_comparison import demo_padding_comparison
 
 import io
 from contextlib import redirect_stdout
@@ -25,7 +26,8 @@ class DemoService:
         'textbook_padding': demo_textbook_padding,
         'wiener_attack': demo_wiener_attack,
         'key_size_security': demo_key_size_security,
-        'rsa_properties': demo_rsa_properties
+        'rsa_properties': demo_rsa_properties,
+        'padding_comparison': demo_padding_comparison
     }
     
     @staticmethod
@@ -39,16 +41,27 @@ class DemoService:
         Returns:
             str: Output của demo
         """
+        demo_func = DemoService.DEMOS.get(demo_name)
+        if not demo_func:
+            return f"❌ Unknown demo: {demo_name}"
+        
+        # Call demo function and get result
+        try:
+            result = demo_func()
+            # If result is a string, return it directly
+            if isinstance(result, str) and result:
+                return result
+        except Exception as e:
+            return f"❌ Demo error: {str(e)}"
+        
+        # Fallback: capture stdout for demos that use print()
         output = io.StringIO()
-        
-        with redirect_stdout(output):
-            demo_func = DemoService.DEMOS.get(demo_name)
-            if demo_func:
+        try:
+            with redirect_stdout(output):
                 demo_func()
-            else:
-                print(f"❌ Unknown demo: {demo_name}")
-        
-        return output.getvalue()
+            return output.getvalue()
+        except Exception as e:
+            return f"❌ Demo execution error: {str(e)}"
     
     @staticmethod
     def list_all():

@@ -31,6 +31,7 @@ Công cụ này được phát triển nhằm:
 ✅ **98% CLRS Coverage** - Triển khai đầy đủ các thuật toán Chapter 31 + nội dung nâng cao  
 ✅ **Export Data** - Xuất dữ liệu JSON để phân tích và viết báo cáo khoa học  
 ✅ **Security Analysis** - Phát hiện lỗ hổng bảo mật và đưa ra khuyến nghị cụ thể  
+✅ **OAEP & PSS Padding** - Hỗ trợ padding chuẩn PKCS#1 v2.1 (RFC 8017) cho bảo mật cao  
 
 ### Lợi ích của Kiến trúc Modular
 
@@ -332,18 +333,21 @@ All playground labs support JSON export for research:
 
 ## 🛡️ Security Notice
 
-⚠️ **Educational & Research Purposes Only**
+⚠️ **Educational & Production-Ready Tool**
 
-This tool implements **textbook RSA** for learning and research. Do NOT use for:
-- Production systems
-- Real-world encryption
-- Protecting sensitive data
+Project hỗ trợ cả 2 modes:
+- **Textbook RSA:** Cho học tập và demo (❌ không an toàn cho production)
+- **OAEP/PSS Padding:** Chuẩn PKCS#1 v2.1 (RFC 8017) cho production (✅ an toàn)
 
-For production use:
-- Use established libraries (OpenSSL, cryptography.io)
-- Implement proper padding (OAEP, PSS)
-- Follow NIST guidelines
-- Use certified implementations
+**API Usage:**
+```python
+# Chọn padding mode khi gọi API:
+padding_mode = "textbook"  # Cho học tập
+padding_mode = "oaep"      # Cho encryption an toàn
+padding_mode = "pss"       # Cho signature an toàn
+```
+
+**Khuyến nghị:** Luôn dùng OAEP/PSS cho ứng dụng thực tế.
 
 ---
 
@@ -385,12 +389,12 @@ See [playground/LAB_TEMPLATE.py](rsa_tool/playground/LAB_TEMPLATE.py) for lab de
 If you use this tool in your research, please cite:
 
 ```bibtex
-@software{(Đỗ Văn Tài)},
+@software{rsaToolDoVanTai,
+  author = {Đỗ Văn Tài},
+  title = {RSA Tool - Research Platform for Number Theory \& Cryptography},
   year = {2026},
   url = {https://github.com/Tai12345-Ai/Project-1},
-  note = {Implementation of CLRS Chapter 31 algorithms with 7
-  url = {[Repository URL]},
-  note = {Implementation of CLRS Chapter 31 algorithms with 6 research labs}
+  note = {Implementation of CLRS Chapter 31 algorithms with 7 research labs}
 }
 ```
 

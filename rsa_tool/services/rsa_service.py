@@ -174,6 +174,8 @@ class RSAService:
                 'security_level': 'High - Non-deterministic, IND-CCA2',
                 'padding_scheme': 'PKCS#1 v2.1'
             }
+            # Convert to string to avoid JavaScript precision loss
+            ciphertext = str(ciphertext)
         else:  # textbook
             ciphertext = rsa.encrypt_text(message)
             security_info = {
@@ -181,9 +183,11 @@ class RSAService:
                 'security_level': 'Low - Deterministic, malleable (educational only)',
                 'padding_scheme': 'None'
             }
+            # Convert list of ints to list of strings
+            ciphertext = [str(c) for c in ciphertext]
         
         return {
-            'ciphertext': ciphertext if isinstance(ciphertext, int) else ciphertext,
+            'ciphertext': ciphertext,
             **security_info
         }
     
@@ -261,7 +265,7 @@ class RSAService:
             }
         
         return {
-            'signature': signature,
+            'signature': str(signature),  # Convert to string for JavaScript
             **security_info
         }
     
