@@ -13,6 +13,7 @@ sys.path.insert(0, current_dir)
 # Import local modules
 from services import RSAService
 from demos import DemoService
+from playground import PlaygroundService
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dev-secret-key-rsa-tool'
@@ -246,6 +247,80 @@ def list_demos():
         'success': True,
         'data': {'demos': demos}
     })
+
+# ==================== PLAYGROUND ROUTES ====================
+
+@app.route('/api/playground/list', methods=['GET'])
+def playground_list():
+    """
+    API: List all available playground labs
+    
+    GET /api/playground/list
+    Returns: {"success": true, "data": {"labs": [...]}}
+    """
+    try:
+        labs = PlaygroundService.list_all()
+        return jsonify({
+            'success': True,
+            'data': {'labs': labs}
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/playground/<lab_id>/info', methods=['GET'])
+def playground_info(lab_id):
+    """
+    API: Get detailed information about a specific lab
+    
+    GET /api/playground/<lab_id>/info
+    Returns: {"success": true, "data": {lab metadata, parameters, examples}}
+    """
+    try:
+        info = PlaygroundService.get_lab_info(lab_id)
+        return jsonify({
+            'success': True,
+            'data': info
+        })
+    except ValueError as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 404
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/playground/<lab_id>/run', methods=['POST'])
+def playground_run(lab_id):
+    """
+    API: Execute a playground lab with parameters
+    
+    POST /api/playground/<lab_id>/run
+    Body: {lab-specific parameters}
+    Returns: {"success": true, "data": {experiment results}}
+    """
+    try:
+        params = request.json or {}
+        result = PlaygroundService.execute(lab_id, params)
+        return jsonify({
+            'success': True,
+            'data': result
+        })
+    except ValueError as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 # ==================== MAIN ====================
 

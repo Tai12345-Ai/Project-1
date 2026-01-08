@@ -369,6 +369,15 @@
                         <div class="menu-item-desc">Chạy các demo</div>
                     </div>
                 </div>
+
+                <h3 style="margin-top: 30px;">Research</h3>
+                <div class="menu-item" data-section="playground">
+                    <div class="menu-item-icon">🔬</div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-title">Playground</div>
+                        <div class="menu-item-desc">Interactive labs</div>
+                    </div>
+                </div>
             </div>
 
             <div class="content">
@@ -581,6 +590,63 @@
                         </div>
 
                         <div class="output" id="demoOutput" style="display:none;"></div>
+                    </div>
+                </div>
+
+                <!-- Playground Section -->
+                <div class="section" id="playground">
+                    <div class="card">
+                        <h3>🔬 Research Playground</h3>
+                        <div class="info-box">
+                            <strong>Interactive labs for CLRS Chapter 31 research</strong><br>
+                            Adjust parameters, run experiments, export data for papers
+                        </div>
+
+                        <!-- Lab Selector -->
+                        <div class="form-group">
+                            <label for="labSelect">Select Lab:</label>
+                            <select id="labSelect" onchange="loadLabInfo()">
+                                <option value="">-- Choose a lab --</option>
+                            </select>
+                        </div>
+
+                        <!-- Lab Info -->
+                        <div id="labInfo" style="display:none;">
+                            <div class="card" style="background: #e0f2fe; margin-bottom: 15px;">
+                                <h4 id="labName" style="margin: 0 0 10px 0; color: #0369a1;"></h4>
+                                <p id="labDescription" style="margin: 0 0 10px 0;"></p>
+                                <p style="font-size: 0.9em; color: #0369a1; margin: 0;">
+                                    <strong>CLRS:</strong> <span id="labCLRS"></span> | 
+                                    <strong>Phase:</strong> <span id="labPhase"></span>
+                                </p>
+                            </div>
+
+                            <!-- Parameter Form -->
+                            <div id="labParametersForm" style="margin-bottom: 15px;"></div>
+
+                            <button onclick="runPlayground()" style="margin-top: 10px;">
+                                🚀 Run Experiment
+                            </button>
+                            
+                            <!-- Results -->
+                            <div id="playgroundResults" style="display:none; margin-top: 20px;">
+                                <h4>📊 Results</h4>
+                                <div class="output" id="playgroundOutput"></div>
+                                
+                                <div style="margin-top: 15px;">
+                                    <button onclick="exportJSON()" style="background: #10b981;">
+                                        💾 Export JSON
+                                    </button>
+                                    <button onclick="copyExperimentID()" style="background: #6366f1; margin-left: 10px;">
+                                        📋 Copy Experiment ID
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="playgroundEmpty" style="text-align: center; padding: 40px; color: #94a3b8;">
+                            Select a lab to start experimenting 🔬
+                        </div>
                     </div>
                 </div>
             </div>
@@ -858,6 +924,237 @@ ${valid ?
             } catch (error) {
                 output.innerHTML = `<span class="error">✗ Error: ${error.message}</span>`;
             }
+        }
+
+        // ==================== PLAYGROUND FUNCTIONS ====================
+        
+        let currentLabInfo = null;
+        let lastExperimentResult = null;
+
+        // Load available labs on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            console.log('🔬 Loading playground labs...');
+            try {
+                const response = await fetch('/api/playground/list');
+                const data = await response.json();
+                console.log('Labs data:', data);
+                
+                if (data.success && data.data.labs.length > 0) {
+                    const select = document.getElementById('labSelect');
+                    data.data.labs.forEach(lab => {
+                        const option = document.createElement('option');
+                        option.value = lab.id;
+                        option.textContent = `${lab.name} (Phase ${lab.phase})`;
+                        select.appendChild(option);
+                    });
+                    
+                    console.log(`✓ Loaded ${data.data.labs.length} labs`);
+                    
+                    // Auto-select first lab if only one available
+                    if (data.data.labs.length === 1) {
+                        console.log('Auto-selecting first lab:', data.data.labs[0].id);
+                        select.value = data.data.labs[0].id;
+                        await loadLabInfo();
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Failed to load labs:', error);
+            }
+        });
+
+        async function loadLabInfo() {
+            const labId = document.getElementById('labSelect').value;
+            console.log('loadLabInfo called with:', labId);
+            
+            if (!labId) {
+                document.getElementById('labInfo').style.display = 'none';
+                document.getElementById('playgroundEmpty').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('playgroundEmpty').style.display = 'none';
+            document.getElementById('playgroundResults').style.display = 'none';
+            
+            try {
+                const response = await fetch(`/api/playground/${labId}/info`);
+                const data = await response.json();
+                console.log('Lab info:', data);
+                
+                if (data.success) {
+                    currentLabInfo = data.data;
+                    
+                    // Display lab info
+                    document.getElementById('labName').textContent = currentLabInfo.name;
+                    document.getElementById('labDescription').textContent = currentLabInfo.description;
+                    document.getElementById('labCLRS').textContent = currentLabInfo.clrs_sections.join(', ');
+                    document.getElementById('labPhase').textContent = currentLabInfo.phase;
+                    
+                    // Build parameter form
+                    buildParameterForm(currentLabInfo.parameters);
+                    
+                    // Show the form
+                    document.getElementById('labInfo').style.display = 'block';
+                    console.log('✓ Lab info displayed');
+                }
+            } catch (error) {
+                console.error('❌ Error loading lab info:', error);
+                alert('Error loading lab info: ' + error.message);
+            }
+        }
+
+        function buildParameterForm(parameters) {
+            const form = document.getElementById('labParametersForm');
+            form.innerHTML = '<h4 style="margin-top: 20px;">⚙️ Parameters</h4>';
+            
+            for (const [paramName, paramSchema] of Object.entries(parameters)) {
+                const formGroup = document.createElement('div');
+                formGroup.className = 'form-group';
+                
+                const label = document.createElement('label');
+                label.textContent = `${paramName}${paramSchema.required ? ' *' : ''}: ${paramSchema.description || ''}`;
+                formGroup.appendChild(label);
+                
+                let input;
+                
+                if (paramSchema.choices) {
+                    // Dropdown for choices
+                    input = document.createElement('select');
+                    input.id = `param_${paramName}`;
+                    paramSchema.choices.forEach(choice => {
+                        const option = document.createElement('option');
+                        option.value = choice;
+                        option.textContent = choice;
+                        if (choice === paramSchema.default) option.selected = true;
+                        input.appendChild(option);
+                    });
+                } else if (paramSchema.type === 'list' || paramName === 'congruences') {
+                    // Textarea for lists (JSON format)
+                    input = document.createElement('textarea');
+                    input.id = `param_${paramName}`;
+                    input.placeholder = 'Enter JSON array, e.g., [[2,3], [3,5], [2,7]]';
+                    input.rows = 3;
+                    if (paramSchema.default) input.value = JSON.stringify(paramSchema.default);
+                } else if (paramSchema.type === 'bool') {
+                    // Checkbox for boolean
+                    input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.id = `param_${paramName}`;
+                    input.checked = paramSchema.default || false;
+                    input.style.width = 'auto';
+                } else {
+                    // Text input for numbers/strings
+                    input = document.createElement('input');
+                    input.type = paramSchema.type === 'int' || paramSchema.type === 'number' ? 'number' : 'text';
+                    input.id = `param_${paramName}`;
+                    if (paramSchema.min !== undefined) input.min = paramSchema.min;
+                    if (paramSchema.max !== undefined) input.max = paramSchema.max;
+                    if (paramSchema.default !== undefined) input.value = paramSchema.default;
+                    input.placeholder = paramSchema.description || '';
+                }
+                
+                formGroup.appendChild(input);
+                form.appendChild(formGroup);
+            }
+        }
+
+        async function runPlayground() {
+            if (!currentLabInfo) return;
+            
+            const labId = document.getElementById('labSelect').value;
+            const params = {};
+            
+            // Collect parameters
+            for (const paramName of Object.keys(currentLabInfo.parameters)) {
+                const input = document.getElementById(`param_${paramName}`);
+                const paramSchema = currentLabInfo.parameters[paramName];
+                
+                if (input.type === 'checkbox') {
+                    params[paramName] = input.checked;
+                } else if (paramSchema.type === 'list' || paramName === 'congruences') {
+                    try {
+                        params[paramName] = JSON.parse(input.value || '[]');
+                    } catch (e) {
+                        alert(`Invalid JSON for ${paramName}: ${e.message}`);
+                        return;
+                    }
+                } else if (paramSchema.type === 'int') {
+                    params[paramName] = parseInt(input.value);
+                } else {
+                    params[paramName] = input.value;
+                }
+            }
+            
+            const output = document.getElementById('playgroundOutput');
+            output.innerHTML = '🔄 Running experiment... <span class="loading"></span>';
+            document.getElementById('playgroundResults').style.display = 'block';
+            
+            try {
+                const response = await fetch(`/api/playground/${labId}/run`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(params)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    lastExperimentResult = data.data;
+                    displayPlaygroundResults(data.data);
+                } else {
+                    output.innerHTML = `<span class="error">✗ Error: ${data.error}</span>`;
+                }
+            } catch (error) {
+                output.innerHTML = `<span class="error">✗ Error: ${error.message}</span>`;
+            }
+        }
+
+        function displayPlaygroundResults(result) {
+            const output = document.getElementById('playgroundOutput');
+            let html = '<div class="success">';
+            
+            // Experiment metadata
+            html += `<strong>📋 Experiment ID:</strong> <code>${result.experiment_id}</code><br>`;
+            html += `<strong>🕐 Timestamp:</strong> ${new Date(result.timestamp).toLocaleString()}<br>`;
+            html += `<strong>⏱️ Time:</strong> ${result.results.benchmark?.time_ms?.toFixed(4) || 'N/A'} ms<br><br>`;
+            
+            // Main results
+            html += '<strong>📊 Results:</strong><br>';
+            html += '<pre style="background: #1e293b; color: #e2e8f0; padding: 15px; border-radius: 5px; overflow-x: auto;">';
+            html += JSON.stringify(result.results, null, 2);
+            html += '</pre>';
+            
+            html += '</div>';
+            output.innerHTML = html;
+        }
+
+        function exportJSON() {
+            if (!lastExperimentResult) {
+                alert('No experiment results to export');
+                return;
+            }
+            
+            const blob = new Blob([JSON.stringify(lastExperimentResult, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${lastExperimentResult.experiment_id}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert('✅ JSON exported: ' + a.download);
+        }
+
+        function copyExperimentID() {
+            if (!lastExperimentResult) {
+                alert('No experiment ID to copy');
+                return;
+            }
+            
+            navigator.clipboard.writeText(lastExperimentResult.experiment_id).then(() => {
+                alert('✅ Experiment ID copied to clipboard!');
+            }).catch(err => {
+                alert('Failed to copy: ' + err);
+            });
         }
     </script>
 </body>
