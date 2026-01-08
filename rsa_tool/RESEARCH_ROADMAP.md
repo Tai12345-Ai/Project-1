@@ -348,7 +348,7 @@ Mỗi lab phải cung cấp:
 
 ## 🚀 Getting Started
 
-### MVP Implementation (Week 1-2)
+### MVP Implementation 
 Bắt đầu với **2 labs** để chứng minh concept:
 
 1. **Modular Arithmetic Lab** (dễ, cơ bản)
@@ -363,10 +363,10 @@ Bắt đầu với **2 labs** để chứng minh concept:
 
 → **Mục tiêu:** Có 2 labs chạy được, có UI đơn giản, export data được.
 
-### Full Implementation (Week 1-6)
+### Full Implementation 
 Hoàn thiện 6 labs "Must Have" và "Should Have".
 
-### Advanced (Week 7+)
+### Advanced 
 Thêm optional modules dựa trên feedback và nhu cầu nghiên cứu.
 
 ---
