@@ -1,51 +1,102 @@
-# RSA Cryptography Tool
+# 🏗️ RSA Tool - Tài Liệu Kiến Trúc Hệ Thống
 
-Công cụ web minh họa thuật toán RSA từ CLRS Chương 31 với 8 demos chi tiết
+**Tác giả:** Đỗ Văn Tài  
+**Mục đích:** Giải thích cấu trúc và thiết kế hệ thống RSA Tool  
 
-## 📁 Kiến trúc Dự án (MODULAR)
+---
+
+## 📋 Tổng Quan
+
+RSA Tool là ứng dụng web được xây dựng để minh họa các thuật toán mật mã RSA từ sách **CLRS Chapter 31**. Hệ thống bao gồm 8 demos tương tác và 7 phòng thí nghiệm (labs) nghiên cứu.
+
+### Kiến Trúc Tổng Thể
+
+Hệ thống sử dụng **kiến trúc phân tầng (Layered Architecture)** gồm 4 tầng chính:
+
+```
+┌─────────────────────────────────────┐
+│   PRESENTATION LAYER (Flask)       │  <- HTTP routes, JSON responses
+├─────────────────────────────────────┤
+│   SERVICE LAYER (Business Logic)   │  <- RSA operations, validation
+├─────────────────────────────────────┤
+│   ALGORITHM LAYER (Core Logic)     │  <- Pure math functions
+└─────────────────────────────────────┘
+```
+
+---
+
+## 📁 Cấu Trúc Thư Mục Chi Tiết
+
+Dự án được tổ chức theo nguyên tắc **Separation of Concerns** (tách biệt trách nhiệm):
 
 ```
 rsa_tool/
 │
-├── app_simple.py                    # 🎯 MAIN APPLICATION (Flask Routes)
+├── app_simple.py                    # 🎯 ĐIỂM KHỞI ĐỘNG (Flask Application)
 │   ├── Khởi tạo Flask app
-│   ├── Định nghĩa API endpoints
-│   ├── Gọi services xử lý logic
-│   └── Trả về JSON responses
+│   ├── Định nghĩa các API endpoints (/api/...)
+│   ├── Gọi services để xử lý logic
+│   └── Trả về JSON responses cho frontend
 │
-├── services/                        # 🔧 BUSINESS LOGIC (Modular)
-│   ├── __init__.py                  # Package exports
-│   └── rsa_service.py               # RSAService class
-│       ├── generate_keys()          - Sinh cặp khóa RSA
+├── services/                        # 🔧 TẦNG LOGIC NGHIỆP VỤ
+│   ├── __init__.py                  # Exports các services
+│   └── rsa_service.py               # RSAService class - Xử lý RSA
+│       ├── generate_keys()          - Sinh cặp khóa (n, e, d)
 │       ├── encrypt()                - Mã hóa message
-│       ├── decrypt()                - Giải mã (có CRT option)
+│       ├── decrypt()                - Giải mã (có tùy chọn CRT)
 │       ├── sign()                   - Ký số message
 │       └── verify()                 - Xác minh chữ ký
 │
-├── demos/                           # 🎬 DEMONSTRATIONS (8 Demos - Easy to Manage)
-│   ├── __init__.py                  # DemoService coordinator
-│   ├── demo_utils.py                # Shared imports & utilities
-│   ├── demo_01_basic_rsa.py         ✓ RSA cơ bản (REFACTORED)
-│   ├── demo_02_miller_rabin.py      - Primality test chi tiết
-│   ├── demo_03_crt_speed.py         - CRT optimization
-│   ├── demo_04_pollard_rho.py       - Factorization attack
-│   ├── demo_05_textbook_padding.py  - Security vulnerabilities
-│   ├── demo_06_wiener_attack.py     - Attack RSA với d nhỏ
-│   ├── demo_07_key_size_security.py - Key size analysis
-│   └── demo_08_rsa_properties.py    - Mathematical properties
+├── demos/                           # 🎬 8 DEMOS MINH HỌA
+│   ├── __init__.py                  # DemoService coordinator - điều phối demos
+│   ├── demo_utils.py                # Các hàm dùng chung (imports, helpers)
+│   ├── demo_01_basic_rsa.py         ✓ RSA cơ bản (Encrypt/Decrypt)
+│   ├── demo_02_miller_rabin.py      ✓ Kiểm tra số nguyên tố
+│   ├── demo_03_crt_speed.py         ✓ Tối ưu hóa CRT
+│   ├── demo_04_pollard_rho.py       ✓ Phân tích số nguyên
+│   ├── demo_05_textbook_padding.py  ✓ Lỗ hổng padding
+│   ├── demo_06_wiener_attack.py     ✓ Tấn công Wiener
+│   ├── demo_07_key_size_security.py ✓ Phân tích độ an toàn
+│   └── demo_08_rsa_properties.py    ✓ Tính chất toán học
 │
-└── templates/
-    └── index.html                   # 📄 FRONTEND (Single Page Application)
-        ├── HTML structure
-        ├── Embedded CSS
-        ├── Embedded JavaScript
-        └── API calls to backend
+├── playground/                      # 🔬 7 LABS NGHIÊN CỨU
+│   ├── __init__.py                  # PlaygroundService - quản lý labs
+│   ├── playground_utils.py          # Utilities dùng chung (benchmark, format)
+│   ├── LAB_TEMPLATE.py              # Template chuẩn cho labs mới
+│   └── labs/
+│       ├── phase1/                  # Phase 1: Lý thuyết số cơ bản
+│       │   ├── modular_lab.py       # Số học modulo, CRT
+│       │   └── exponentiation_lab.py # Lũy thừa, căn nguyên thủy
+│       ├── phase2/                  # Phase 2: Số nguyên tố & RSA
+│       │   ├── prime_lab.py         # Kiểm tra nguyên tố
+│       │   └── rsa_parameter_lab.py # Tham số RSA
+│       ├── phase3/                  # Phase 3: Phân tích mật mã
+│       │   ├── factorization_lab.py # Phân tích số nguyên
+│       │   └── rsa_attacks_lab.py   # Tấn công RSA
+│       └── phase4/                  # Phase 4: Chủ đề nâng cao
+│           └── discrete_log_lab.py  # Logarit rời rạc, DH, ElGamal
+│
+├── templates/
+│   └── index.html                   # 📄 GIAO DIỆN WEB (Single Page App)
+│       ├── HTML structure
+│       ├── Embedded CSS (styling)
+│       ├── Embedded JavaScript (logic)
+│       └── Gọi API backend (/api/...)
+│
+└── Algorithms/                      # ⚙️ TẦNG THUẬT TOÁN THUẦN TÚY
+    ├── __init__.py
+    ├── rsa.py                       # Thuật toán RSA cơ bản
+    ├── utilities.py                 # Hàm số học (gcd, modexp, prime...)
+    └── pollard_rho.py               # Thuật toán phân tích Pollard Rho
 ```
 
-## 🎯 Ý Nghĩa Từng File
+---
 
-### 1. `app_simple.py` - Application Layer
-**Trách nhiệm:** HTTP request/response handling
+## 🎯 Giải Thích Chi Tiết Từng Thành Phần
+
+### 1. `app_simple.py` - Tầng Ứng Dụng (Application Layer)
+
+**Trách nhiệm:** Xử lý HTTP requests và responses
 
 ```python
 # Ví dụ route
@@ -60,129 +111,165 @@ def generate_key():
     return jsonify({'success': True, 'data': result})
 ```
 
-**Lợi ích:**
-- ✅ Tách biệt HTTP logic khỏi business logic
-- ✅ Dễ test (mock services)
-- ✅ RESTful API design
-- ✅ Có thể thay đổi framework (FastAPI, Django) mà không ảnh hưởng services
+### 2. `services/rsa_service.py` - Tầng Logic Nghiệp Vụ
 
-### 2. `services/` - Business Logic Layer (MODULAR)
-**Trách nhiệm:** RSA operations logic
-
-```
-services/
-├── __init__.py              # Export RSAService
-└── rsa_service.py           # Main RSA logic
-```
+**Trách nhiệm:** Xử lý logic RSA (validation, format, error handling)
 
 ```python
-# services/rsa_service.py
 class RSAService:
     @staticmethod
     def generate_keys(bits=1024, e=65537):
-        """
-        Sinh khóa RSA
-        - Gọi Algorithms.rsa.keygen()
-        - Format output thành dict
-        - Không phụ thuộc Flask
-        """
-        pub, priv = keygen(bits=bits, e=e)
-        return {'public_key': {...}, 'private_key': {...}}
+        """Sinh khóa RSA và format kết quả"""
+        # Validation
+        if bits < 512:
+            raise ValueError("Key size too small")
+        
+        # Gọi algorithm layer
+        from Algorithms.rsa import keygen
+        keys = keygen(bits, e)
+        
+        # Format output
+        return {
+            'public_key': {'n': keys['n'], 'e': keys['e']},
+            'private_key': {'d': keys['d']},
+            'p': keys['p'],
+            'q': keys['q']
+        }
 ```
 
-**Lợi ích:**
-- ✅ Reusable (có thể dùng trong CLI, GUI, API khác)
-- ✅ Testable độc lập
-- ✅ Single Responsibility Principle
-- ✅ Không mix Flask code với crypto code
-- ✅ **Dễ thêm services mới** (crypto_service.py, utils_service.py...)
+### 3. `demos/` - Tầng Demos Minh Họa (8 demos độc lập)
 
-### 3. `demos/` - Demonstration Layer (HIGHLY MODULAR)
-**Trách nhiệm:** Educational demonstrations - MỖI DEMO 1 FILE
+**Trách nhiệm:** Minh họa giáo dục - mỗi demo 1 file riêng
 
+**Cấu trúc:**
 ```
 demos/
-├── __init__.py                      # DemoService coordinator
-├── demo_utils.py                    # Shared imports
-├── demo_01_basic_rsa.py            # 150 lines
-├── demo_02_miller_rabin.py         # 180 lines
-├── demo_03_crt_speed.py            # 200 lines
-├── demo_04_pollard_rho.py          # 130 lines
-├── demo_05_textbook_padding.py     # 120 lines
-├── demo_06_wiener_attack.py        # 90 lines
-├── demo_07_key_size_security.py    # 130 lines
-└── demo_08_rsa_properties.py       # 150 lines
+├── __init__.py                      # DemoService điều phối các demos
+├── demo_utils.py                    # Hàm imports và utilities chung
+├── demo_01_basic_rsa.py            # 150 dòng - RSA cơ bản
+├── demo_02_miller_rabin.py         # 180 dòng - Kiểm tra nguyên tố
+├── demo_03_crt_speed.py            # 200 dòng - Tối ưu CRT
+├── demo_04_pollard_rho.py          # 130 dòng - Phân tích số
+├── demo_05_textbook_padding.py     # 120 dòng - Lỗ hổng padding
+├── demo_06_wiener_attack.py        # 90 dòng - Tấn công Wiener
+├── demo_07_key_size_security.py    # 130 dòng - Phân tích độ an toàn
+└── demo_08_rsa_properties.py       # 150 dòng - Tính chất toán học
 ```
 
-```python
-# demos/demo_01_basic_rsa.py
-from .demo_utils import *
+### 4. `playground/labs/` - Tầng Nghiên Cứu (7 labs)
+- ✅ **Dễ bảo trì:** Sửa demo 01 không ảnh hưởng demo 02-08
+- ✅ **Dễ mở rộng:** Thêm demo mới chỉ cần tạo file và import
+- ✅ **Phù hợp nhóm:** Nhiều người làm việc song song không conflict
+- ✅ **Dễ test:** Có thể test từng demo độc lập
+- ✅ **Tổ chức tốt:** Mỗi file ~100-200 dòng thay vì 1 file 1100+ dòng
 
-def demo_basic_rsa():
-    """Demo 01: RSA cơ bản"""
-    print("╔" + "═" * 78 + "╗")
-    print("║   DEMO 01: BASIC RSA   ║")
-    # ... demo logic ...
+### 4. `playground/labs/` - Tầng Nghiên Cứu (7 labs)
+
+**Trách nhiệm:** Môi trường thử nghiệm và thu thập dữ liệu
+
+**Cấu trúc theo Phase:**
+```
+labs/
+├── phase1/ (Lý thuyết số cơ bản - CLRS 31.1-31.6)
+│   ├── modular_lab.py           # Modulo, Extended GCD, CRT
+│   └── exponentiation_lab.py    # Lũy thừa, căn nguyên thủy
+├── phase2/ (Số nguyên tố & RSA - CLRS 31.7-31.8)
+│   ├── prime_lab.py             # Miller-Rabin, Fermat, Trial Division
+│   └── rsa_parameter_lab.py     # Tham số RSA, security analysis
+├── phase3/ (Phân tích mật mã - CLRS 31.9)
+│   ├── factorization_lab.py     # Pollard Rho, Fermat, Trial Division
+│   └── rsa_attacks_lab.py       # Wiener, Common Modulus, Broadcast
+└── phase4/ (Nâng cao - Beyond CLRS)
+    └── discrete_log_lab.py      # DLP, Diffie-Hellman, ElGamal
 ```
 
-**Lợi ích:**
-- ✅ **Dễ maintain**: Sửa demo 01 không ảnh hưởng demo 02
-- ✅ **Dễ thêm demos mới**: Chỉ cần tạo file mới + import vào __init__.py
-- ✅ **Collaboration-friendly**: Nhiều người có thể làm việc cùng lúc
-- ✅ **Git-friendly**: Conflicts ít hơn khi merge
-- ✅ **Dễ test từng demo**: pytest demos/demo_01_basic_rsa.py
-- ✅ **Clear separation**: Mỗi file ~100-200 lines thay vì 1 file 1100+ lines
+### 5. `templates/index.html` - Giao Diện Web
 
-### 4. `templates/index.html` - Presentation Layer
 **Trách nhiệm:** User Interface
 
-- **HTML:** Structure
-- **CSS:** Styling (embedded)
-- **JavaScript:** Interactivity + API calls
+**Cấu trúc:**
+- HTML: Cấu trúc trang
+- CSS (embedded): Styling
+- JavaScript (embedded): Gọi API và xử lý events
 
-**Lợi ích:**
-- ✅ Single Page Application
-- ✅ Responsive design
-- ✅ Clean separation from backend
+### 6. `Algorithms/` - Tầng Thuật Toán Thuần Túy
 
-## 🎬 8 Demos Chi Tiết
+**Trách nhiệm:** Các hàm toán học thuần túy, không phụ thuộc web
 
-### Demo 01: Basic RSA
-- ✅ Step-by-step key generation
-- ✅ Mathematical verification (n = p×q, e×d ≡ 1)
-- ✅ Multiple message encryption
-- ✅ Digital signature với tamper test
-- ✅ Deterministic property test
+**Nội dung:**
+- `rsa.py`: Các thuật toán RSA cơ bản
+- `utilities.py`: Hàm số học (gcd, modexp, prime...)
+- `pollard_rho.py`: Thuật toán phân tích số
 
-### Demo 02: Miller-Rabin
-- ✅ Algorithm explanation
-- ✅ Test known primes/composites
-- ✅ Probability analysis (error rate)
-- ✅ Prime generation performance
-- ✅ Compare với Trial Division
+---
 
-### Demo 03: CRT Speed
-- ✅ CRT algorithm explanation
-- ✅ Performance test (multiple key sizes)
-- ✅ Step-by-step CRT calculation
-- ✅ Mathematical proof
-- ✅ Speedup analysis (~4x)
+## 🔄 Luồng Xử Lý Dữ Liệu
 
-### Demo 04: Pollard Rho
-- ✅ Factorization tests (40-128 bits)
-- ✅ Detailed analysis
-- ✅ Security implications table
-- ✅ Why RSA needs large primes
-- ✅ Quantum threat discussion
+### Ví dụ: Sinh khóa RSA
 
-### Demo 05: Textbook Padding
-- ✅ Deterministic vulnerability
-- ✅ Homomorphic property attack
-- ✅ Malleability demonstration
-- ✅ Padding solutions (OAEP, PKCS#1)
+```
+1. Browser (index.html)
+   └─> POST /api/key/generate {'bits': 1024}
 
-### Demo 06: Wiener's Attack
-- ✅ Small d vulnerability
+2. Flask (app_simple.py)
+   └─> Nhận request
+   └─> Gọi RSAService.generate_keys(bits=1024)
+
+3. RSAService (rsa_service.py)
+   └─> Validate input
+   └─> Gọi Algorithms.rsa.keygen(bits=1024)
+
+4. Algorithms (rsa.py)
+   └─> Generate p, q (prime numbers)
+   └─> Compute n = p * q
+   └─> Compute φ(n) = (p-1)(q-1)
+   └─> Compute d (modular inverse)
+   └─> Return (public_key, private_key)
+
+5. RSAService
+   └─> Format response as JSON
+   └─> Return to Flask
+
+6. Flask
+   └─> Send JSON response
+
+7. Browser
+   └─> Display keys in UI
+```
+
+---
+
+## 🎓 Các Nguyên Tắc Thiết Kế Áp Dụng
+
+### 1. Separation of Concerns
+- **Routes** (app.py) ← HTTP handling
+- **Services** (services/) ← Business logic
+- **Demos** (demos/) ← Educational content
+- **Templates** (index.html) ← UI
+
+### 2. Maintainability
+- Mỗi file có trách nhiệm rõ ràng
+- Code dễ đọc, dễ tìm hiểu
+- Mỗi file ~100-200 dòng
+
+### 3. Testability
+- Test services độc lập (không cần Flask)
+- Mock services khi test routes
+- Unit test từng layer
+
+### 4. Scalability
+- Dễ thêm endpoints mới
+- Dễ thêm demos/labs mới
+- Có thể tách services thành microservices
+
+### 5. Reusability
+- Services dùng được cho CLI, GUI, API khác
+- Demos có thể chạy standalone
+- Template có thể dùng cho mobile app
+
+---
+
+## 📝 Lưu Ý Quan Trọng
 - ✅ Continued fraction attack
 - ✅ Security threshold (d < n^0.25)
 - ✅ Real-world implications
@@ -270,76 +357,7 @@ GET /api/demo/list
 - Demos có thể chạy standalone
 - Template có thể dùng cho mobile app
 
-## 🆚 So Sánh Kiến Trúc
-
-| Aspect | Old (Single File) | New (Modular) |
-|--------|------------------|---------------|
-| **services.py** | 1 file (151 lines) | Folder: 2 files |
-| **demos.py** | 1 file (1136 lines) ❌ | Folder: 10 files (~150 lines each) ✅ |
-| **Maintainability** | Khó (scroll nhiều) | Dễ (mỗi file nhỏ) |
-| **Collaboration** | Conflict nhiều | Parallel work ✅ |
-| **Testing** | Test cả file lớn | Test từng module |
-| **Adding Features** | Sửa file lớn | Tạo file mới |
-| **Git Diff** | Khó đọc (1000+ lines) | Rõ ràng (<200 lines) |
-| **Import Speed** | Load hết (~5MB) | Load on-demand |
-| **IDE Performance** | Chậm (file lớn) | Nhanh ✅ |
-
-## ✨ Điểm Mạnh Của Kiến Trúc Mới
-
-### 1. Separation of Concerns
-- **Routes** (app.py) ← HTTP handling
-- **Services/** (services/) ← Business logic (modular)
-- **Demos/** (demos/) ← Educational content (mỗi demo 1 file)
-- **Templates** (index.html) ← UI
-
-### 2. Maintainability (IMPROVED)
-- ✅ Dễ tìm bug (mỗi file có nhiệm vụ riêng)
-- ✅ Dễ thêm feature mới (tạo file mới, không sửa file cũ)
-- ✅ Dễ refactor (ảnh hưởng local, không global)
-- ✅ **File nhỏ (~150 lines) dễ đọc hơn file lớn (1000+ lines)**
-
-### 3. Testability
-- Test services độc lập (không cần Flask)
-- Test từng demo riêng biệt
-- Mock services khi test routes
-- Unit test từng layer
-
-### 4. Scalability
-- Dễ thêm endpoints mới
-- Dễ thêm demos mới (chỉ cần 1 file)
-- Có thể tách services thành microservices
-- **Load on-demand** (không load hết 8 demos nếu chỉ cần 1)
-
-### 5. Collaboration-Friendly
-- Nhiều người làm việc cùng lúc
-- Git conflicts ít hơn
-- Code review dễ hơn (small PRs)
-- **Research-friendly**: Mỗi người phụ trách 1-2 demos
-
-### 6. Research Benefits
-- **Easy to experiment**: Tạo demo_09_new_idea.py
-- **Version control**: demo_01_v1.py, demo_01_v2.py
-- **Reusable**: Import demo functions vào research notebooks
-- **Documentation**: Mỗi demo có docstring riêng
-
-### Mỗi Demo Dạy:
-1. **Basic RSA**: Core algorithm, signatures
-2. **Miller-Rabin**: Probabilistic algorithms, primality
-3. **CRT**: Optimization techniques, number theory
-4. **Pollard Rho**: Cryptanalysis, security
-5. **Textbook Padding**: Vulnerabilities, attacks
-6. **Wiener**: Advanced attacks, small d problem
-7. **Key Size**: Practical security, standards
-8. **Properties**: Mathematical foundations
-
-### Kỹ Năng Học Được:
-- ✅ RSA algorithm implementation
-- ✅ Number theory applications
-- ✅ Cryptanalysis techniques
-- ✅ Security best practices
-- ✅ Performance optimization
-- ✅ Web application development
-- ✅ API design
+---
 
 ## 📝 Lưu Ý Quan Trọng
 
@@ -354,7 +372,9 @@ GET /api/demo/list
 - Use recommended key sizes (2048+)
 - Regular security audits
 
-## 📚 Tài Liệu Tham Khảo
+---
+
+## � Tài Liệu Tham Khảo
 
 - CLRS Chapter 31: Number-Theoretic Algorithms
 - RFC 8017: PKCS #1 v2.2 (RSA Cryptography)
@@ -363,6 +383,12 @@ GET /api/demo/list
 
 ---
 
-**Tác giả:** RSA Tool Development Team  
-**Ngày:** January 2026  
-**License:** Educational Use Only
+## 👨‍💻 Thông Tin Tác Giả
+
+**Tác giả:** Đỗ Văn Tài  
+**Email:** lucdoka1245@gmail.com  
+**Mục đích:** Giáo dục và nghiên cứu mật mã học RSA  
+**Công nghệ:** Python 3.13, Flask 3.0, CLRS Chapter 31  
+
+**Last Updated:** January 8, 2026  
+**Status:** Production Ready - 8 Demos + 7 Labs Complete

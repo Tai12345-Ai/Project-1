@@ -1,43 +1,113 @@
-# 🔬 Playground Module - README
+# 🔬 Playground Module - Phòng Thí Nghiệm Nghiên Cứu
 
-## 📁 Structure
+**Tác giả:** Đỗ Văn Tài  
+**Mục đích:** Môi trường thử nghiệm thuật toán và thu thập dữ liệu nghiên cứu  
+
+---
+
+## 📖 Giới Thiệu
+
+Playground Module là hệ thống **7 phòng thí nghiệm (labs)** cho phép người dùng:
+- ✅ Thử nghiệm các thuật toán số học và mật mã
+- ✅ So sánh hiệu năng giữa các thuật toán
+- ✅ Thu thập dữ liệu để phân tích và viết báo cáo
+- ✅ Xuất kết quả dạng JSON để xử lý thêm
+- ✅ Phát hiện lỗ hổng bảo mật trong cấu hình RSA
+
+---
+
+## 📁 Cấu Trúc Labs
+
+Các labs được tổ chức theo 4 phase từ cơ bản đến nâng cao:
 
 ```
 playground/
-├── __init__.py              # PlaygroundService coordinator
-├── playground_utils.py      # Shared utilities
-├── LAB_TEMPLATE.py          # Template for new labs
+├── __init__.py              # PlaygroundService - điều phối các labs
+├── playground_utils.py      # Công cụ chung: benchmark, format, validate
+├── LAB_TEMPLATE.py          # Template chuẩn để tạo labs mới
 │
-├── modular_lab.py          # Phase 1.1 - Modular Arithmetic
-├── exponentiation_lab.py   # Phase 1.2 - Exponentiation & Order
-├── prime_lab.py            # Phase 2.1 - Primality Testing
-├── rsa_parameter_lab.py    # Phase 2.2 - RSA Parameters
-├── factorization_lab.py    # Phase 3.1 - Factorization
-└── rsa_attacks_lab.py      # Phase 3.2 - RSA Attacks
+└── labs/
+    ├── phase1/              # Phase 1: Lý thuyết số cơ bản (CLRS 31.1-31.6)
+    │   ├── modular_lab.py         # Số học modulo, GCD, CRT
+    │   └── exponentiation_lab.py  # Lũy thừa, order, căn nguyên thủy
+    │
+    ├── phase2/              # Phase 2: Số nguyên tố & RSA (CLRS 31.7-31.8)
+    │   ├── prime_lab.py           # Miller-Rabin, Fermat, Trial Division
+    │   └── rsa_parameter_lab.py   # Phân tích tham số RSA
+    │
+    ├── phase3/              # Phase 3: Phân tích mật mã (CLRS 31.9)
+    │   ├── factorization_lab.py   # Pollard Rho, Fermat factorization
+    │   └── rsa_attacks_lab.py     # Wiener, Common Modulus, Broadcast
+    │
+    └── phase4/              # Phase 4: Chủ đề nâng cao (Beyond CLRS)
+        └── discrete_log_lab.py    # DLP, Diffie-Hellman, ElGamal
 ```
 
-## 🎯 Usage
+**Giá trị của cấu trúc phase:**
+- 📚 Học tập theo lộ trình từ cơ bản → nâng cao
+- 🎯 Dễ theo dõi tiến độ
+- 🔄 Mỗi phase độc lập, có thể học riêng lẻ
 
-### From Python Code
+## 🎯 Cách Sử Dụng
+
+### 1. Sử Dụng Trong Python Code
 
 ```python
 from rsa_tool.playground import PlaygroundService
 
-# List all available labs
+# Liệt kê tất cả labs có sẵn
 labs = PlaygroundService.list_all()
-print(labs)
+for lab in labs:
+    print(f"- {lab['name']} (Phase {lab['phase']})")
 
-# Get detailed info about a lab
+# Lấy thông tin chi tiết về 1 lab
 info = PlaygroundService.get_lab_info('modular_arithmetic')
-print(info['parameters'])
+print(f"Parameters: {info['parameters']}")
+print(f"Examples: {info['examples']}")
 
-# Execute a lab
+# Thực thi một lab với tham số
 params = {
-    'a': 5,
-    'b': 3,
-    'm': 7
+    'mode': 'extended_gcd',
+    'a': 240,
+    'b': 46
 }
 result = PlaygroundService.execute('modular_arithmetic', params)
+print(result)
+```
+
+### 2. Sử Dụng Qua Web API
+
+```bash
+# List all labs
+curl http://127.0.0.1:5000/api/playground/list
+
+# Get lab info
+curl http://127.0.0.1:5000/api/playground/info/modular_arithmetic
+
+# Run a lab
+curl -X POST http://127.0.0.1:5000/api/playground/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "lab_id": "modular_arithmetic",
+    "parameters": {
+      "mode": "extended_gcd",
+      "a": 240,
+      "b": 46
+    }
+  }'
+```
+
+### 3. Test Labs Trực Tiếp
+
+Mỗi lab có thể chạy độc lập để test:
+
+```bash
+# Test Modular Arithmetic Lab
+python -m rsa_tool.playground.labs.phase1.modular_lab
+
+# Test Discrete Logarithm Lab
+python -m rsa_tool.playground.labs.phase4.discrete_log_lab
+```
 print(result['results'])
 
 # Export to JSON
@@ -285,23 +355,41 @@ def run(params):
     return format_results(...)
 ```
 
-## 📚 Resources
+---
 
-- **CLRS Chapter 31**: Algorithm reference
-- **demos/**: Example implementations
-- **Algorithms/**: Core number theory functions
-- **RESEARCH_ROADMAP.md**: Full project plan
+## 💡 Giá Trị và Lợi Ích
 
-## 🚀 Next Steps
+### Cho Sinh Viên 📚
+- Học lý thuyết số qua thực hành
+- Thấy cách thuật toán hoạt động step-by-step
+- So sánh hiệu năng các thuật toán
 
-1. Implement `modular_lab.py` (Week 1)
-2. Implement `exponentiation_lab.py` (Week 2)
-3. Add API routes to `app_simple.py`
-4. Create frontend "Playground" tab
-5. Test data export workflow
-6. Iterate based on feedback
+### Cho Nhà Nghiên Cứu 🔬
+- Môi trường thử nghiệm có sẵn
+- Thu thập dữ liệu JSON để phân tích
+- Benchmark chính xác
+
+### Cho Giảng Viên 👨‍🏫
+- Dạy CLRS Chapter 31 với demos trực quan
+- Cho bài tập thực hành
+- Đánh giá hiểu biết sinh viên
 
 ---
 
-**Status:** 📋 Planning → 🚧 Ready for Implementation  
-**Priority:** Modular Lab (Phase 1.1) first!
+## 📚 Tài Liệu Tham Khảo
+
+- **CLRS Chapter 31**: Number-Theoretic Algorithms
+- **demos/**: Các ví dụ implementation
+- **Algorithms/**: Core number theory functions
+- **RESEARCH_ROADMAP.md**: Kế hoạch dự án đầy đủ
+
+---
+
+## 👨‍💻 Thông Tin
+
+**Tác giả:** Đỗ Văn Tài  
+**Email:** dovantai2203@gmail.com  
+**Mục đích:** Nghiên cứu và giáo dục mật mã học  
+
+**Last Updated:** January 8, 2026  
+**Status:** ✅ 7 Labs Complete (Phase 1-4)

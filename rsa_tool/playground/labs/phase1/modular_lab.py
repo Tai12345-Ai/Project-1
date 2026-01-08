@@ -18,7 +18,7 @@ CLRS Sections:
 """
 
 from typing import Dict, Any, List, Tuple
-from .playground_utils import (
+from rsa_tool.playground.playground_utils import (
     create_experiment_id,
     format_results,
     benchmark,
