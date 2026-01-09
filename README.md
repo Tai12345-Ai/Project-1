@@ -64,55 +64,6 @@ pip inCấu Trúc Dự Án
 
 Dự án được tổ chức theo kiến trúc phân tầng, giúp dễ hiểu và dễ phát triển:
 
-```
-rsa_tool/
-├── app_simple.py              # Điểm khởi động ứng dụng web (Flask)
-├── services/
-│   └── rsa_service.py         # Xử lý logic nghiệp vụ RSA
-├── demos/                     # 8 Demos minh họa tương tác
-│   ├── demo_01_basic_rsa.py          # RSA cơ bản: mã hóa/giải mã
-│   ├── demo_02_miller_rabin.py       # Kiểm tra số nguyên tố
-│   ├── demo_03_crt_speed.py          # Tối ưu hóa CRT (nhanh gấp 3x)
-│   ├── demo_04_pollard_rho.py        # Phân tích số nguyên
-│   ├── demo_05_textbook_padding.py   # Các lỗ hổng padding
-│   ├── demo_06_wiener_attack.py      # Tấn công Wiener
-│   ├── demo_07_key_size_security.py  # Phân tích độ an toàn
-│   └── demo_08_rsa_properties.py     # Tính chất toán học
-├── playground/                # Phòng thí nghiệm nghiên cứu
-│   ├── playground_utils.py    # Công cụ dùng chung
-│   └── labs/
-│       ├── phase1/            # Lý thuyết số cơ bản (CLRS 31.1-31.6)
-│       │   ├── modular_lab.py          # Số học modulo
-│       │   └── exponentiation_lab.py   # Lũy thừa & căn nguyên thủy
-│       ├── phase2/            # Số nguyên tố & RSA (CLRS 31.7-31.8)
-│       │   ├── prime_lab.py            # Kiểm tra nguyên tố
-│       │   └── rsa_parameter_lab.py    # Tham số RSA
-│       ├── phase3/            # Phân tích mật mã (CLRS 31.9)
-│       │   ├── factorization_lab.py    # Phân tích số nguyên
-│       │   └── rsa_attacks_lab.py      # Các tấn công RSA
-│       └── phase4/            # Chủ đề nâng cao (Beyond CLRS)
-│           └── discrete_log_lab.py     # Logarit rời rạc & DH/ElGamal
-├── templates/
-│   └── index.html             # Giao diện web single-page
-└── Algorithms/                # Thuật toán nền tảng
-    ├── rsa.py                 # Các hàm RSA cơ bản
-    ├── utilities.py           # Công cụ lý thuyết số
-    └── pollard_rho.py         # Thuật toán phân tích
-```
-
-**Giải thích cấu trúc:**
-- **app_simple.py:** Điểm vào chính, xử lý HTTP requests/responses
-- **services/:** Chứa business logic, tách biệt khỏi web layer
-- **demos/:** 8 demos minh họa cho người dùng hiểu RSA từng bước
-- **playground/:** 7 labs nghiên cứu để thử nghiệm và thu thập dữ liệu
-- **Algorithms/:** Các thuật toán số học thuần túy, không phụ thuộc web     │   └── rsa_parameter_lab.py
-│       └── phase3/            # Cryptanalysis (CLRS 31.9)
-│           ├── factorization_lab.py
-│           └── rsa_attacks_lab.py
-├── templates/
-│   └── index.html             # Single-page web application
-└── Algorithms/                # Cor - Minh Họa Tương Tác
-
 Các demo giúp người dùng hiểu RSA thông qua ví dụ cụ thể, có giải thích từng bước:
 
 | Demo | Mô tả | Giá trị học tập |
