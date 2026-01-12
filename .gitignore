@@ -21,3 +21,23 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Environment variables
+.env
+.env.local
+
+# Deployment
+.vercel/
+.railway/
+
+# Data files
+*.json.backup
+
+# Screenshots
+figures/
+screenshots/
+
+# Test files
+test_*.py
+*_test.py
+debug_*.py
