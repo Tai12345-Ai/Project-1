@@ -13,15 +13,24 @@ def gcd(a: int, b: int) -> int:
 
 def extended_gcd(a: int, b: int) -> Tuple[int, int, int]:
     """
-    Extended Euclid (CLRS 31.2).
+    Extended Euclid (CLRS 31.2) - Iterative version to avoid recursion limit.
     Returns (d, x, y) such that ax + by = d = gcd(a,b).
     """
-    if b == 0:
-        return (abs(a), 1 if a >= 0 else -1, 0)
-    d, x1, y1 = extended_gcd(b, a % b)
-    x = y1
-    y = x1 - (a // b) * y1
-    return (d, x, y)
+    # Make a, b positive
+    a, b = abs(a), abs(b)
+    
+    # Iterative version
+    old_r, r = a, b
+    old_s, s = 1, 0
+    old_t, t = 0, 1
+    
+    while r != 0:
+        quotient = old_r // r
+        old_r, r = r, old_r - quotient * r
+        old_s, s = s, old_s - quotient * s
+        old_t, t = t, old_t - quotient * t
+    
+    return (old_r, old_s, old_t)
 
 
 def modinv(a: int, n: int) -> int:

@@ -1,0 +1,119 @@
+{
+  "timestamp": "2026-01-12T10:00:00",
+  "correctness": {
+    "tests": [
+      {
+        "name": "BasicRSA",
+        "passed": true
+      },
+      {
+        "name": "OAEP",
+        "passed": true
+      },
+      {
+        "name": "PSS",
+        "passed": true
+      },
+      {
+        "name": "MillerRabin",
+        "passed": true
+      },
+      {
+        "name": "CRT",
+        "passed": true
+      }
+    ]
+  },
+  "performance": {
+    "modexp": {
+      "data": [
+        {
+          "key_size": 512,
+          "avg_time_ms": 0.015
+        },
+        {
+          "key_size": 1024,
+          "avg_time_ms": 0.045
+        },
+        {
+          "key_size": 2048,
+          "avg_time_ms": 0.18
+        }
+      ]
+    },
+    "crt": {
+      "data": [
+        {
+          "key_size": 512,
+          "standard_ms": 2.5,
+          "crt_ms": 0.8,
+          "speedup": 3.1
+        },
+        {
+          "key_size": 1024,
+          "standard_ms": 12.5,
+          "crt_ms": 3.8,
+          "speedup": 3.3
+        },
+        {
+          "key_size": 2048,
+          "standard_ms": 85.2,
+          "crt_ms": 23.1,
+          "speedup": 3.7
+        }
+      ]
+    },
+    "padding": {
+      "data": [
+        {
+          "key_size": 1024,
+          "textbook_ms": 0.002,
+          "oaep_ms": 0.35,
+          "pss_ms": 0.28
+        },
+        {
+          "key_size": 2048,
+          "textbook_ms": 0.003,
+          "oaep_ms": 0.52,
+          "pss_ms": 0.41
+        }
+      ]
+    },
+    "keygen": {
+      "data": [
+        {
+          "key_size": 512,
+          "avg_time_ms": 1250
+        },
+        {
+          "key_size": 1024,
+          "avg_time_ms": 8500
+        }
+      ]
+    }
+  },
+  "security": {
+    "key_size_security": [
+      {
+        "bits": 1024,
+        "security": "~80bits",
+        "status": "Deprecated"
+      },
+      {
+        "bits": 2048,
+        "security": "~112bits",
+        "status": "Minimum"
+      },
+      {
+        "bits": 3072,
+        "security": "~128bits",
+        "status": "Recommended"
+      },
+      {
+        "bits": 4096,
+        "security": "~152bits",
+        "status": "Long-term"
+      }
+    ]
+  }
+}

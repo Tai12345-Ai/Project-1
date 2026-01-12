@@ -16,8 +16,8 @@ from demos import DemoService
 from playground import PlaygroundService
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'dev-secret-key-rsa-tool'
-app.config['DEBUG'] = True
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-rsa-tool')
+app.config['DEBUG'] = os.environ.get('FLASK_ENV', 'development') != 'production'
 
 # ==================== ROUTES ====================
 
@@ -373,6 +373,11 @@ def playground_run(lab_id):
 # ==================== MAIN ====================
 
 if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_ENV', 'development') != 'production'
+    
     print("Starting RSA Tool...")
-    print("Open browser at: http://127.0.0.1:5000")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    print(f"Environment: {os.environ.get('FLASK_ENV', 'development')}")
+    print(f"Open browser at: http://127.0.0.1:{port}")
+    
+    app.run(host='0.0.0.0', port=port, debug=debug)

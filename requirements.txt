@@ -1,0 +1,16 @@
+# RSA Cryptography Tool - Dependencies
+# Python 3.13+
+
+# Web Framework
+Flask==3.0.0
+Werkzeug==3.0.1
+
+# No external crypto libraries - pure Python implementation
+# All cryptographic primitives implemented in Algorithms/
+
+# For deployment only
+gunicorn==21.2.0  # Production WSGI server (Linux/Mac)
+waitress==3.0.0   # Production server for Windows
+
+# Optional: For better performance
+# python-dotenv==1.0.0  # Environment variables
