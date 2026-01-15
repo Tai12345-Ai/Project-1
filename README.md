@@ -1,4 +1,4 @@
-# 🔐 RSA Tool - Research Platform for Number Theory & Cryptography
+<img width="790" height="652" alt="image" src="https://github.com/user-attachments/assets/96ee5fba-1100-4c73-a1db-8da6a274e02a" /># 🔐 RSA Tool - Research Platform for Number Theory & Cryptography
 
 **Interactive web-based tool for RSA cryptography research, education, and security analysis**
 
@@ -48,27 +48,6 @@ Hệ thống được thiết kế theo mô hình phân tầng (layered architec
 ## 🚀 Quick Start
 
 ### Installation
-Bước 1: Clone Source Code
-1 git clone https :// github . com / Tai12345 - Ai / Project -1. git
-2 cd .../ rsa - tool
-Bước 2: Tạo Virtual Environment
-Windows:
-1 python -m venv . venv
-2 . venv \ Scripts \ activate
-Linux/macOS:
-1 python3 -m venv . venv
-2 source . venv / bin / activate
-Bước 3: Cài Đặt Dependencies
-1 pip install -r requirements . txt
-Nội dung file requirements.txt:
-1 Flask ==3.0.0
-2 gunicorn ==21.2.0
-3 matplotlib ==3.8.0
-4 numpy ==1.26.0
-Bước 4: Chạy Application
-1 cd rsa_tool
-2 python app_simple . py
-Truy cập: http://127.0.0.1:5000
 
 ### 🔬 Research Labs (7 modules)
 
