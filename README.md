@@ -48,46 +48,29 @@ Hệ thống được thiết kế theo mô hình phân tầng (layered architec
 ## 🚀 Quick Start
 
 ### Installation
+Bước 1: Clone Source Code
+1 git clone https :// github . com / Tai12345 - Ai / Project -1. git
+2 cd .../ rsa - tool
+Bước 2: Tạo Virtual Environment
+Windows:
+1 python -m venv . venv
+2 . venv \ Scripts \ activate
+Linux/macOS:
+1 python3 -m venv . venv
+2 source . venv / bin / activate
+Bước 3: Cài Đặt Dependencies
+1 pip install -r requirements . txt
+Nội dung file requirements.txt:
+1 Flask ==3.0.0
+2 gunicorn ==21.2.0
+3 matplotlib ==3.8.0
+4 numpy ==1.26.0
+Bước 4: Chạy Application
+1 cd rsa_tool
+2 python app_simple . py
+Truy cập: http://127.0.0.1:5000
 
-```bash
-# Clone repository
-git clone <repository-url>
-cd Project-1
-
-# Create virtual environment
-python -m venv .venv
-source .venv/Scripts/activate  # Windows
-# source .venv/bin/activate    # Linux/Mac
-
-# Install dependencies
-pip inCấu Trúc Dự Án
-
-Dự án được tổ chức theo kiến trúc phân tầng, giúp dễ hiểu và dễ phát triển:
-
-Các demo giúp người dùng hiểu RSA thông qua ví dụ cụ thể, có giải thích từng bước:
-
-| Demo | Mô tả | Giá trị học tập |
-|------|-------|-----------------|
-| **Basic RSA** | Sinh khóa, mã hóa, giải mã cơ bản | Hiểu quy trình RSA hoàn chỉnh |
-| **Miller-Rabin** | Kiểm tra số nguyên tố với độ chính xác cao | Học thuật toán xác suất |
-| **CRT Speed** | Tối ưu CRT giúp giải mã nhanh gấp 3.37x | So sánh hiệu năng thực tế |
-| **Pollard Rho** | Phân tích số nguyên để phá RSA | Hiểu rõ lỗ hổng bảo mật |
-| **Textbook Padding** | Phân tích RSA không padding | Học về tầm quan trọng của padding |
-| **Wiener Attack** | Tấn công khi private key quá nhỏ | Biết cách chọn tham số an toàn
-### 🎨 Interactive Demos (8 modules)
-
-| Demo | Description | CLRS Section |
-|------|-------------|--------------|
-| **Basic RSA** | Key generation, encryption, decryption | 31.7 |
-| **Miller-Rabin** | Primality testing with configurable rounds | 31.8 |
-| **CRT Speed** | Chinese Remainder Theorem optimization | 31.5 |
-| **Pollard Rho** | Integer factorization attack | 31.9 |
-| **Textbook Padding** | Security analysis of unpadded RSA | - |
-| **Wiener Attack** | Small private exponent vulnerability | - |
-| **Key Size Security** | Bit strength analysis | - |
-| **RSA Properties** | Mathematical properties exploration | 31.7 |
-
-### 🔬 Research Labs (6 modules)
+### 🔬 Research Labs (7 modules)
 
 #### **Phase 1: Core Number Theory** (CLRS 31.1-31.6)
 
